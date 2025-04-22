@@ -1,0 +1,1 @@
+export default function MessageBubble({ text }) { return <div className='p-2 bg-white shadow rounded my-2'>{text}</div>; }
