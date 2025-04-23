@@ -1,64 +1,67 @@
-import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import Sidebar from './components/Sidebar';
-import ChatWindow from './components/ChatWindow';
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./components/Login";
+import Sidebar from "./components/Sidebar";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+// Admin pages
+import AdminDashboard from "./admin/AdminDashboard";
+import ManageTenants from "./admin/ManageTenants";
+
+// Tenant pages
+import Dashboard from "./tenant/Dashboard";
+import Messages from "./tenant/Messages";
+import Customers from "./tenant/Customers";
+import Profile from "./tenant/Profile";
+import TopUp from "./tenant/TopUp";
+import Bookings from "./tenant/Bookings";
+import Analytics from "./tenant/Analytics";
+import NotificationSettings from "./tenant/NotificationSettings";
+import Team from "./tenant/Team";
 
 export default function App() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
 
-  const login = async (e) => {
-    e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-    } else {
-      setUser(data.user);
-    }
-  };
+  useEffect(() => {
+    const stored = localStorage.getItem("role");
+    if (stored) setRole(stored);
+  }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-        <h1 className="text-2xl font-bold mb-4">Login to Bocc Client Panel</h1>
-        <form onSubmit={login} className="bg-white shadow-md p-6 rounded w-full max-w-sm">
-          <input
-            type="email"
-            placeholder="Email"
-            className="border p-2 w-full mb-3"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="border p-2 w-full mb-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className="bg-black text-white px-4 py-2 rounded w-full">
-            Login
-          </button>
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        </form>
-      </div>
-    );
-  }
-
-  // Show chat UI after login
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <ChatWindow />
-    </div>
+    <Router>
+      {!role ? (
+        <Routes>
+          <Route path="/" element={<Login setRole={setRole} />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      ) : (
+        <div className="flex h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans">
+          <Sidebar role={role} />
+          <div className="flex-1 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-md">
+            <Routes>
+              {role === "tenant" ? (
+                <>
+                  <Route path="/tenant/dashboard" element={<Dashboard />} />
+                  <Route path="/tenant/messages" element={<Messages />} />
+                  <Route path="/tenant/customers" element={<Customers />} />
+                  <Route path="/tenant/profile" element={<Profile />} />
+                  <Route path="/tenant/topup" element={<TopUp />} />
+                  <Route path="/tenant/bookings" element={<Bookings />} />
+                  <Route path="/tenant/analytics" element={<Analytics />} />
+                  <Route path="/tenant/notifications" element={<NotificationSettings />} />
+                  <Route path="/tenant/team" element={<Team />} />
+                  <Route path="*" element={<Navigate to="/tenant/dashboard" />} />
+                </>
+              ) : (
+                <>
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/tenants" element={<ManageTenants />} />
+                  <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+                </>
+              )}
+            </Routes>
+          </div>
+        </div>
+      )}
+    </Router>
   );
 }
