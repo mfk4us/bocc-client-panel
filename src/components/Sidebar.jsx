@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { language, setLanguage, lang } from "../lang";
+import { supabase } from "../components/supabaseClient";
 import {
   HomeIcon,
   ChatBubbleLeftRightIcon,
@@ -19,8 +20,65 @@ import {
 export default function Sidebar({ role }) {
   const currentLang = lang[language] || lang.en;
   const [theme, setTheme] = useState("light");
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : window.innerWidth < 768;
+  });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [tenantPages, setTenantPages] = useState({});
+  const [workflowName, setWorkflowName] = useState(localStorage.getItem("workflow_name"));
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchTenantPages = async () => {
+      const { data, error } = await supabase
+        .from("tenant_pages")
+        .select("*")
+        .eq("workflow_name", workflowName);
+      console.log("WORKFLOW NAME:", workflowName);
+      console.log("FETCHED TENANT PAGES:", data);
+      console.log("SUPABASE ERROR:", error);
+
+      if (!error && data) {
+        setTenantPages(data[0] || {});
+      }
+    };
+    if (role === "tenant") {
+      fetchTenantPages();
+    }
+  }, [workflowName]);
+
+  useEffect(() => {
+    if (role !== "tenant") return;
+    if (!tenantPages || Object.keys(tenantPages).length === 0) return;
+
+    const allowedPaths = {
+      dashboard: "/tenant/dashboard",
+      messages: "/tenant/messages",
+      customers: "/tenant/customers",
+      profile: "/tenant/profile",
+      bookings: "/tenant/bookings",
+      topup: "/tenant/topup",
+      analytics: "/tenant/analytics",
+      notifications: "/tenant/notifications",
+      team: "/tenant/team",
+    };
+
+    const currentPath = location.pathname;
+    const allowed = Object.entries(allowedPaths).find(
+      ([key, path]) => tenantPages[key] && currentPath === path
+    );
+
+    if (!allowed) {
+      const firstAllowed = Object.entries(allowedPaths).find(([key]) => tenantPages[key]);
+      if (firstAllowed) {
+        navigate(firstAllowed[1], { replace: true });
+      }
+    }
+  }, [tenantPages, location.pathname]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -40,7 +98,9 @@ export default function Sidebar({ role }) {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsCollapsed(window.innerWidth < 768);
+      if (localStorage.getItem('sidebarCollapsed') === null) {
+        setIsCollapsed(window.innerWidth < 768);
+      }
     };
     window.addEventListener("resize", handleResize);
     handleResize();
@@ -69,25 +129,32 @@ export default function Sidebar({ role }) {
     ? [
         { label: currentLang.adminDashboard, path: "/admin/dashboard", icon: HomeIcon },
         { label: currentLang.manageTenants, path: "/admin/tenants", icon: UsersIcon },
+        { label: currentLang.managePages || "Manage Pages", path: "/admin/manage-pages", icon: Cog6ToothIcon },
       ]
-    : [
-        { label: currentLang.dashboard, path: "/tenant/dashboard", icon: HomeIcon },
-        { label: currentLang.messages, path: "/tenant/messages", icon: ChatBubbleLeftRightIcon },
-        { label: currentLang.customers, path: "/tenant/customers", icon: UsersIcon },
-        { label: currentLang.profile, path: "/tenant/profile", icon: Cog6ToothIcon },
-        { label: currentLang.bookings, path: "/tenant/bookings", icon: CalendarDaysIcon },
-        { label: currentLang.topup, path: "/tenant/topup", icon: DocumentChartBarIcon },
-        { label: currentLang.analytics, path: "/tenant/analytics", icon: DocumentChartBarIcon },
-        { label: currentLang.notifications, path: "/tenant/notifications", icon: BellIcon },
-        { label: currentLang.team, path: "/tenant/team", icon: UserGroupIcon },
-      ];
+    : tenantPages && Object.keys(tenantPages).length > 0 ? [
+        tenantPages.dashboard && { label: currentLang.dashboard, path: "/tenant/dashboard", icon: HomeIcon },
+        tenantPages.messages && { label: currentLang.messages, path: "/tenant/messages", icon: ChatBubbleLeftRightIcon },
+        tenantPages.customers && { label: currentLang.customers, path: "/tenant/customers", icon: UsersIcon },
+        tenantPages.profile && { label: currentLang.profile, path: "/tenant/profile", icon: Cog6ToothIcon },
+        tenantPages.bookings && { label: currentLang.bookings, path: "/tenant/bookings", icon: CalendarDaysIcon },
+        tenantPages.topup && { label: currentLang.topup, path: "/tenant/topup", icon: DocumentChartBarIcon },
+        tenantPages.analytics && { label: currentLang.analytics, path: "/tenant/analytics", icon: DocumentChartBarIcon },
+        tenantPages.notifications && { label: currentLang.notifications, path: "/tenant/notifications", icon: BellIcon },
+        tenantPages.team && { label: currentLang.team, path: "/tenant/team", icon: UserGroupIcon },
+      ].filter(Boolean) : [];
+
+  console.log("Sidebar links to render:", links);
 
   return (
     <aside className={`min-h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700 px-3 py-6 flex flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
       <div>
         <div className="flex justify-center mb-4">
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => {
+              const next = !isCollapsed;
+              setIsCollapsed(next);
+              localStorage.setItem('sidebarCollapsed', JSON.stringify(next));
+            }}
             className="focus:outline-none"
           >
             <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

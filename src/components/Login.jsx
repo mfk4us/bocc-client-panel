@@ -9,6 +9,10 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
+    // clear any stale auth info
+    localStorage.removeItem('role');
+    localStorage.removeItem('workflow_name');
+    localStorage.removeItem('email');
     e.preventDefault();
 
     if (!email || !password) {
@@ -25,6 +29,7 @@ export default function Login() {
       setErrorMsg(authError.message);
       return;
     }
+
 
     console.log("Logged in user ID:", authData?.user?.id);
 
@@ -48,14 +53,13 @@ export default function Login() {
 
     localStorage.setItem('role', profile.role);
     localStorage.setItem('workflow_name', profile.workflow_name);
-
-    if (profile.role === 'admin') {
-      console.log("Redirecting to /admin/dashboard");
-      navigate('/admin/dashboard');
-    } else {
-      console.log("Redirecting to /tenant/dashboard");
-      navigate('/tenant/dashboard');
+    if (authData?.user?.email) {
+      localStorage.setItem('email', authData.user.email);
     }
+
+    const destination = profile.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard';
+    console.log(`Redirecting to ${destination}`);
+    window.location.href = destination;
   };
 
   return (

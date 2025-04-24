@@ -37,9 +37,6 @@ export default function ManageTenants() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   // Show/hide search input state
   const [showSearchInput, setShowSearchInput] = useState(false);
-  // Password confirmation modal state
-  const [showPwdModal, setShowPwdModal] = useState(false);
-  const [pwdInput, setPwdInput] = useState("");
   // Inline edit state
   const [inlineEditId, setInlineEditId] = useState(null);
   const [inlineEditData, setInlineEditData] = useState({});
@@ -103,7 +100,7 @@ export default function ManageTenants() {
       // Fetch full profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id, email, role, workflow_name, phone_number, business_name, customer_name, status")
+        .select("*")
         .eq("id", currentUser.id)
         .single();
       if (profileError) {
@@ -321,6 +318,24 @@ export default function ManageTenants() {
                 <circle cx="12" cy="12" r="6" />
               </svg>
             </button>
+            <button
+              onClick={() => {
+                setEditTenant({
+                  id: null,
+                  email: "",
+                  role: "tenant",
+                  workflow_name: "",
+                  phone_number: "",
+                  business_name: "",
+                  customer_name: "",
+                  status: "active",
+                });
+                setShowModal(true);
+              }}
+              className="ml-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              ➕ Add Tenant
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -411,7 +426,7 @@ export default function ManageTenants() {
                       />
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">#</th>
-                    {["Email","Role","Workflow","Phone","Business","Customer","Status","Actions"].map(col => (
+                    {["Customer","Email","Role","Workflow","Phone","Business","Status","Actions"].map(col => (
                       <th key={col} className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">
                         {col}
                       </th>
@@ -420,6 +435,32 @@ export default function ManageTenants() {
                   <tr className="bg-white dark:bg-gray-900">
                     <th className="px-4 py-1 text-center"></th>
                     <th className="px-4 py-1 text-center"></th>
+                    {/* Customer filter */}
+                    <th className="px-4 py-1 text-center">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Filter Customer"
+                          value={columnFilters.customer_name}
+                          onChange={e =>
+                            setColumnFilters({ ...columnFilters, customer_name: e.target.value })
+                          }
+                          className="w-full pr-8 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 focus:ring-1 focus:ring-indigo-500 outline-none"
+                        />
+                        {columnFilters.customer_name && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setColumnFilters({ ...columnFilters, customer_name: "" })
+                            }
+                            className="absolute inset-y-0 right-2 flex items-center justify-center text-red-500 hover:text-red-700 text-base"
+                            tabIndex={-1}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </th>
                     {/* Email filter */}
                     <th className="px-4 py-1 text-center">
                       <div className="relative">
@@ -550,32 +591,6 @@ export default function ManageTenants() {
                         )}
                       </div>
                     </th>
-                    {/* Customer filter */}
-                    <th className="px-4 py-1 text-center">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Filter Customer"
-                          value={columnFilters.customer_name}
-                          onChange={e =>
-                            setColumnFilters({ ...columnFilters, customer_name: e.target.value })
-                          }
-                          className="w-full pr-8 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 focus:ring-1 focus:ring-indigo-500 outline-none"
-                        />
-                        {columnFilters.customer_name && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setColumnFilters({ ...columnFilters, customer_name: "" })
-                            }
-                            className="absolute inset-y-0 right-2 flex items-center justify-center text-red-500 hover:text-red-700 text-base"
-                            tabIndex={-1}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    </th>
                     {/* Status filter */}
                     <th className="px-4 py-1 text-center">
                       <div className="relative">
@@ -631,6 +646,20 @@ export default function ManageTenants() {
                           />
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-200">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          {inlineEditId === t.id ? (
+                            <input
+                              type="text"
+                              value={inlineEditData.customer_name || ""}
+                              onChange={e =>
+                                setInlineEditData({ ...inlineEditData, customer_name: e.target.value })
+                              }
+                              className="w-full px-1 py-1 text-xs border border-gray-300 rounded"
+                            />
+                          ) : (
+                            t.customer_name
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-sm text-center">
                           {inlineEditId === t.id ? (
                             <input
@@ -701,20 +730,6 @@ export default function ManageTenants() {
                             t.business_name
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          {inlineEditId === t.id ? (
-                            <input
-                              type="text"
-                              value={inlineEditData.customer_name || ""}
-                              onChange={e =>
-                                setInlineEditData({ ...inlineEditData, customer_name: e.target.value })
-                              }
-                              className="w-full px-1 py-1 text-xs border border-gray-300 rounded"
-                            />
-                          ) : (
-                            t.customer_name
-                          )}
-                        </td>
                         <td className="px-4 py-3 text-center">
                           {inlineEditId === t.id ? (
                             <select
@@ -750,10 +765,31 @@ export default function ManageTenants() {
                             <>
                               <button
                                 onClick={async () => {
-                                  setPwdInput("");
-                                  setShowPwdModal(true);
-                                  setEditTenant(inlineEditData);
-                                  setInlineEditId(null);
+                                  const tenantToUpdate = inlineEditData;
+                                  setSavingRowId(tenantToUpdate.id);
+                                  // update existing
+                                  const { error } = await supabase
+                                    .from("profiles")
+                                    .update({
+                                      role: tenantToUpdate.role,
+                                      workflow_name: tenantToUpdate.workflow_name,
+                                      phone_number: tenantToUpdate.phone_number,
+                                      business_name: tenantToUpdate.business_name,
+                                      customer_name: tenantToUpdate.customer_name,
+                                      status: tenantToUpdate.status,
+                                    })
+                                    .eq("id", tenantToUpdate.id)
+                                    .select();
+                                  if (!error) {
+                                    setShowModal(false);
+                                    setInlineEditId(null);
+                                    fetchTenants();
+                                    toast.success("Changes saved.");
+                                  } else {
+                                    toast.error("Failed to save changes.");
+                                    console.error("Update failed:", error);
+                                  }
+                                  setSavingRowId(null);
                                 }}
                                 className="text-green-600 hover:text-green-800 mr-2"
                               >
@@ -858,11 +894,16 @@ export default function ManageTenants() {
       {showModal && editTenant && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full space-y-4">
-            <h3 className="text-lg font-semibold mb-2">Edit Tenant</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {editTenant?.id ? "Edit Tenant" : "Add New Tenant"}
+            </h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="p-2 border border-gray-300 rounded bg-gray-100">
-                <strong>Email:</strong> {editTenant.email}
-              </div>
+              <input
+                className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
+                value={editTenant.email || ""}
+                onChange={(e) => setEditTenant({ ...editTenant, email: e.target.value })}
+                placeholder="Email"
+              />
               <select
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.role}
@@ -913,73 +954,67 @@ export default function ManageTenants() {
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
-                onClick={() => {
-                  setPwdInput("");
-                  setShowPwdModal(true);
+                onClick={async () => {
+                  const tenantToUpdate = editTenant;
+                  setSavingRowId(tenantToUpdate.id);
+                  if (!tenantToUpdate.id) {
+                    // Ensure workflow_name is present and not empty after trimming
+                    const workflowName = tenantToUpdate.workflow_name?.trim() || "";
+                    if (!workflowName) {
+                      toast.error("Workflow name is required.");
+                      setSavingRowId(null);
+                      return;
+                    }
+                    // Only include required fields, do NOT include id
+                    const newTenant = {
+                      email: tenantToUpdate.email?.trim() || `user_${Date.now()}@example.com`,
+                      role: tenantToUpdate.role || "tenant",
+                      workflow_name: workflowName,
+                      phone_number: tenantToUpdate.phone_number || "",
+                      business_name: tenantToUpdate.business_name || "",
+                      customer_name: tenantToUpdate.customer_name || "",
+                      status: tenantToUpdate.status || "active",
+                    };
+                    const { data, error } = await supabase
+                      .from("profiles")
+                      .insert([newTenant]);
+                    if (!error) {
+                      setShowModal(false);
+                      setInlineEditId(null);
+                      fetchTenants();
+                      toast.success("Tenant added.");
+                    } else {
+                      toast.error("Failed to add tenant.");
+                      console.error("Insert failed:", error);
+                    }
+                    setSavingRowId(null);
+                  } else {
+                    const { error } = await supabase
+                      .from("profiles")
+                      .update({
+                        role: tenantToUpdate.role,
+                        workflow_name: tenantToUpdate.workflow_name,
+                        phone_number: tenantToUpdate.phone_number,
+                        business_name: tenantToUpdate.business_name,
+                        customer_name: tenantToUpdate.customer_name,
+                        status: tenantToUpdate.status,
+                      })
+                      .eq("id", tenantToUpdate.id)
+                      .select();
+                    if (!error) {
+                      setShowModal(false);
+                      setInlineEditId(null);
+                      fetchTenants();
+                      toast.success("Changes saved.");
+                    } else {
+                      toast.error("Failed to save changes.");
+                      console.error("Update failed:", error);
+                    }
+                    setSavingRowId(null);
+                  }
                 }}
               >
                 Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showPwdModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full space-y-4">
-            <h3 className="text-lg font-semibold">Confirm Changes</h3>
-            <p>Please enter your password to confirm:</p>
-            <input
-              type="password"
-              className="w-full p-2 border border-gray-300 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={pwdInput}
-              onChange={(e) => setPwdInput(e.target.value)}
-              placeholder="Password"
-            />
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                onClick={() => setShowPwdModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
-                onClick={async () => {
-                  if (!pwdInput) {
-                    toast.error("Password required.");
-                    return;
-                  }
-                  // perform update
-                  const tenantToUpdate = inlineEditData && inlineEditData.id ? inlineEditData : editTenant;
-                  setSavingRowId(tenantToUpdate.id);
-                  const { error } = await supabase
-                    .from("profiles")
-                    .update({
-                      role: tenantToUpdate.role,
-                      workflow_name: tenantToUpdate.workflow_name,
-                      phone_number: tenantToUpdate.phone_number,
-                      business_name: tenantToUpdate.business_name,
-                      customer_name: tenantToUpdate.customer_name,
-                      status: tenantToUpdate.status,
-                    })
-                    .eq("id", tenantToUpdate.id)
-                    .select();
-                  if (!error) {
-                    setShowPwdModal(false);
-                    setShowModal(false);
-                    setInlineEditId(null);
-                    fetchTenants();
-                    toast.success("Changes saved.");
-                    setSavingRowId(null);
-                  } else {
-                    console.error("Update failed:", error.message);
-                    toast.error("Failed to save changes.");
-                    setSavingRowId(null);
-                  }
-                }}
-              >
-                Confirm
               </button>
             </div>
           </div>

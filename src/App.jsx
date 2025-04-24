@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 // Admin pages
 import AdminDashboard from "./admin/AdminDashboard";
 import ManageTenants from "./admin/ManageTenants";
+import ManagePages from "./admin/ManagePages";
 
 // Tenant pages
 import Dashboard from "./tenant/Dashboard";
@@ -55,6 +56,7 @@ export default function App() {
                 <>
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/tenants" element={<ManageTenants />} />
+                  <Route path="/admin/manage-pages" element={<ManagePages />} />
                   <Route path="*" element={<Navigate to="/admin/dashboard" />} />
                 </>
               )}
