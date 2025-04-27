@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DefaultAvatar from "../assets/default-avatar.png";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { language, setLanguage, lang } from "../lang";
 import { supabase } from "../components/supabaseClient";
@@ -28,9 +29,50 @@ export default function Sidebar({ role }) {
 
   const [tenantPages, setTenantPages] = useState({});
   const [workflowName, setWorkflowName] = useState(localStorage.getItem("workflow_name"));
+  const [customerName, setCustomerName] = useState("");
+  const [isLoadingName, setIsLoadingName] = useState(true);
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const fetchCustomerName = async () => {
+    if (!workflowName) {
+      console.error("Workflow name missing.");
+      setIsLoadingName(false);
+      return;
+    }
+
+    console.log("Fetching customer name for workflow:", workflowName);
+
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("customer_name")
+        .eq("workflow_name", workflowName)
+        .single();
+
+      if (profileError) {
+        console.error("Supabase error fetching profile:", profileError.message);
+        setCustomerName(""); // fallback
+      } else if (profileData && profileData.customer_name) {
+        console.log("Fetched customer name:", profileData.customer_name);
+        setCustomerName(profileData.customer_name);
+      } else {
+        console.error("No customer profile found for workflow:", workflowName);
+        setCustomerName(""); // fallback
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching customer name:", err.message);
+      setCustomerName(""); // fallback
+    }
+    setIsLoadingName(false);
+  };
+
+  useEffect(() => {
+    if (workflowName) {
+      fetchCustomerName();
+    }
+  }, [workflowName]);
 
   useEffect(() => {
     const fetchTenantPages = async () => {
@@ -38,6 +80,7 @@ export default function Sidebar({ role }) {
         .from("tenant_pages")
         .select("*")
         .eq("workflow_name", workflowName);
+
       console.log("WORKFLOW NAME:", workflowName);
       console.log("FETCHED TENANT PAGES:", data);
       console.log("SUPABASE ERROR:", error);
@@ -46,6 +89,7 @@ export default function Sidebar({ role }) {
         setTenantPages(data[0] || {});
       }
     };
+
     if (role === "tenant") {
       fetchTenantPages();
     }
@@ -166,19 +210,23 @@ export default function Sidebar({ role }) {
         {!isCollapsed ? (
           <div className="flex items-center gap-3 mb-6 px-4">
             <img
-              src="/default-avatar.png"
+              src={DefaultAvatar}
               alt="Profile"
               className="w-12 h-12 rounded-full border"
             />
             <div>
-              <p className="text-base font-semibold">John Doe</p>
+              {isLoadingName ? (
+                <div className="h-4 w-24 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-base font-semibold">{customerName || (role === "admin" ? "Admin User" : "John Doe")}</p>
+              )}
               <p className="text-sm text-gray-500 dark:text-gray-400">{role}</p>
             </div>
           </div>
         ) : (
           <div className="flex justify-center mb-6">
             <img
-              src="/default-avatar.png"
+              src={DefaultAvatar}
               alt="Profile"
               className="w-10 h-10 rounded-full border"
             />
