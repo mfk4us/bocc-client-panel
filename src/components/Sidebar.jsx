@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DefaultAvatar from "../assets/default-avatar.png";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useMatch } from "react-router-dom";
 import { language, setLanguage, lang } from "../lang";
 import { supabase } from "../components/supabaseClient";
 import {
@@ -16,24 +16,49 @@ import {
   GlobeAltIcon,
   MoonIcon,
   SunIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
+
 
 export default function Sidebar({ role }) {
   const currentLang = lang[language] || lang.en;
   const [theme, setTheme] = useState("light");
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
-    return saved ? JSON.parse(saved) : window.innerWidth < 768;
+    return saved
+      ? JSON.parse(saved)
+      : (window.innerWidth < 768 && window.innerHeight >= window.innerWidth);
   });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // toggle for settings menu (logout, theme, language)
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Detect portrait orientation
+  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setIsPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Detect mobile (width < 768)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [tenantPages, setTenantPages] = useState({});
   const [workflowName, setWorkflowName] = useState(localStorage.getItem("workflow_name"));
   const [customerName, setCustomerName] = useState("");
   const [isLoadingName, setIsLoadingName] = useState(true);
-
-  const location = useLocation();
-  const navigate = useNavigate();
 
   const fetchCustomerName = async () => {
     if (!workflowName) {
@@ -143,31 +168,13 @@ export default function Sidebar({ role }) {
   useEffect(() => {
     const handleResize = () => {
       if (localStorage.getItem('sidebarCollapsed') === null) {
-        setIsCollapsed(window.innerWidth < 768);
+        setIsCollapsed(window.innerWidth < 768 && window.innerHeight >= window.innerWidth);
       }
     };
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const toggleLang = () => {
-    const newLang = language === "en" ? "ar" : "en";
-    setLanguage(newLang);
-    window.location.reload();
-  };
-
-  const toggleDarkMode = () => {
-    if (theme === "dark") {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setTheme("light");
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setTheme("dark");
-    }
-  };
 
   const links = role === "admin"
     ? [
@@ -187,7 +194,98 @@ export default function Sidebar({ role }) {
         tenantPages.team && { label: currentLang.team, path: "/tenant/team", icon: UserGroupIcon },
       ].filter(Boolean) : [];
 
+  const toggleLang = () => {
+    const newLang = language === "en" ? "ar" : "en";
+    setLanguage(newLang);
+    window.location.reload();
+  };
+
+  const toggleDarkMode = () => {
+    if (theme === "dark") {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setTheme("light");
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setTheme("dark");
+    }
+  };
+
+  // precise route matching for bottom nav
+  const isDashboard = useMatch({ path: "/tenant/dashboard", end: true });
+  const isMessagesList = useMatch({ path: "/tenant/messages", end: true });
+  const isCustomers = useMatch({ path: "/tenant/customers", end: true });
+  // Detect individual chat-history pages
+  const isMessageDetail = !!useMatch({ path: "/tenant/messages/:id", end: true });
+
+  // show bottom nav only on mobile for dashboard or customers (hide on any messages routes)
+  if (isMobile && !isMessageDetail && (isDashboard || isCustomers)) {
+    return (
+      <>
+      <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 sm:py-3 z-50">
+        {links.map(({ path, icon: Icon, label }) => (
+          <NavLink
+            key={path}
+            to={path}
+            className={({ isActive }) =>
+              `flex flex-col items-center text-xs sm:text-sm ${
+                isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'
+              }`
+            }
+          >
+            <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
+            <span className="mt-1">{label}</span>
+          </NavLink>
+        ))}
+        {/* settings toggle */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="p-2 rounded bg-white dark:bg-gray-900 active:bg-gray-100 dark:active:bg-gray-800"
+          aria-label="Open settings"
+        >
+          <Bars3Icon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600 dark:text-gray-300" />
+        </button>
+      </nav>
+      {showSettings && (
+        <div className="fixed bottom-20 right-4 flex flex-col items-center space-y-4 z-50">
+          <button
+            onClick={toggleLang}
+            aria-label="Toggle Language"
+            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+          >
+            <GlobeAltIcon className="w-8 h-8 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
+            onClick={toggleDarkMode}
+            aria-label="Toggle Theme"
+            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+          >
+            {theme === "dark" ? (
+              <SunIcon className="w-8 h-8 text-yellow-400" />
+            ) : (
+              <MoonIcon className="w-8 h-8 text-gray-600 dark:text-gray-300" />
+            )}
+          </button>
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            aria-label="Logout"
+            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+          >
+            <ArrowRightOnRectangleIcon className="w-8 h-8 text-red-600" />
+          </button>
+        </div>
+      )}
+      </>
+    );
+  }
+
   console.log("Sidebar links to render:", links);
+
+  // Hide sidebar on phone portrait for any messages page
+  if (isMobile && isPortrait && location.pathname.startsWith("/tenant/messages")) {
+    return null;
+  }
 
   return (
     <aside className={`min-h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700 px-3 py-6 flex flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
@@ -251,66 +349,34 @@ export default function Sidebar({ role }) {
       </div>
 
       <div className="space-y-3 text-sm flex flex-col items-center mt-6 relative">
-        {!isCollapsed && window.innerWidth >= 768 ? (
-          <>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="p-2 focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            aria-label="Open settings"
+          >
+            <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+        {showSettings && (
+          <div className="mt-2 space-y-2">
             <button
               onClick={toggleLang}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
             >
-              <GlobeAltIcon className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                {currentLang.languageToggle}
-              </span>
+              🌐 {currentLang.languageToggle}
             </button>
-
             <button
               onClick={toggleDarkMode}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
             >
-              {theme === "dark" ? (
-                <SunIcon className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <MoonIcon className="w-5 h-5 text-gray-600" />
-              )}
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                {theme === "dark" ? currentLang.lightMode : currentLang.darkMode}
-              </span>
+              {theme === "dark" ? "☀️ " + currentLang.lightMode : "🌙 " + currentLang.darkMode}
             </button>
-
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
             >
-              <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-600" />
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                {currentLang.logout}
-              </span>
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-3">
-            <button
-              onClick={toggleLang}
-              title={currentLang.languageToggle}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 hover:scale-105 shadow transition-transform text-blue-900 dark:text-white"
-            >
-              🌐
-            </button>
-
-            <button
-              onClick={toggleDarkMode}
-              title={theme === "dark" ? currentLang.lightMode : currentLang.darkMode}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-100 dark:bg-gray-700 hover:scale-105 shadow transition-transform text-yellow-800 dark:text-yellow-100"
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-
-            <button
-              onClick={() => setShowLogoutModal(true)}
-              title={currentLang.logout}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-700 hover:scale-105 shadow transition-transform text-red-900 dark:text-white"
-            >
-              🚪
+              🚪 {currentLang.logout}
             </button>
           </div>
         )}

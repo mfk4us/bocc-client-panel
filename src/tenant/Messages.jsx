@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ArrowsUpDownIcon, MicrophoneIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from 'react-router-dom';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { Fragment } from 'react';
 import { FiFileText, FiFile, FiFilePlus } from 'react-icons/fi';
@@ -9,16 +11,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function Messages() {
-  useEffect(() => {
-    // disable page scroll when Messages tab is active
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    return () => {
-      // restore default scrolling when leaving
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    };
-  }, []);
   const [workflow, setWorkflow] = useState("");
   const [customers, setCustomers] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(null);
@@ -29,6 +21,49 @@ export default function Messages() {
   const [dateOpen, setDateOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
+
+  // left pane sort state and ref
+  const [leftShowSortMenu, setLeftShowSortMenu] = useState(false);
+  const leftSortRef = useRef(null);
+  // left pane sort configuration
+  const [leftSortConfig, setLeftSortConfig] = useState({ key: 'timestamp', direction: 'desc' });
+  // sort toggle and configuration for chat history
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const sortContainerRef = useRef(null);
+  // click-outside for left sort menu only
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (leftShowSortMenu && leftSortRef.current && !leftSortRef.current.contains(event.target)) {
+        setLeftShowSortMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [leftShowSortMenu]);
+  // click-outside for chat sort menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (showSortMenu && sortContainerRef.current && !sortContainerRef.current.contains(event.target)) {
+        setShowSortMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSortMenu]);
+
+  // mobile view state: "list" shows chat list, "chat" shows conversation on phones
+  const [mobileView, setMobileView] = useState("list");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const navigate = useNavigate();
+  // for swipe gesture on mobile
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
 
   // auto-scroll to bottom when chatHistory updates
   const scrollRef = useRef(null);
@@ -231,12 +266,7 @@ export default function Messages() {
         setRecordingDuration(Math.floor((Date.now() - start) / 1000));
       }, 1000));
       recorder.start();
-      setTimeout(() => {
-        if (recorder.state !== "inactive") {
-          recorder.stop();
-          stream.getTracks().forEach(track => track.stop());
-        }
-      }, 30000);
+      // Removed the 30-second auto-stop setTimeout.
     } catch (err) {
       alert("Microphone error: " + err.message);
     }
@@ -247,6 +277,7 @@ export default function Messages() {
     if (mediaRecorder && mediaRecorder.state === "recording") {
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      clearInterval(intervalId);
     }
   };
 
@@ -303,7 +334,7 @@ export default function Messages() {
       });
   }, []);
 
-  // fetch list of unique customer numbers
+  // fetch list of unique customer numbers (only with messages in last 24 hours)
   useEffect(() => {
     if (!workflow) return;
     supabase
@@ -312,9 +343,12 @@ export default function Messages() {
       .eq("workflow_name", workflow)
       .order("timestamp", { ascending: false })
       .then(({ data }) => {
-        // group by number, pick latest content & contact_name
+        // group by number, pick latest content & contact_name, only for messages in last 24h
         const map = {};
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         data.forEach((m) => {
+          if (new Date(m.timestamp) < twentyFourHoursAgo) return;
           if (!map[m.number]) {
             map[m.number] = {
               number: m.number,
@@ -401,93 +435,180 @@ export default function Messages() {
     return () => clearInterval(intervalId);
   }, [workflow, selectedNumber]);
 
-  // apply left-pane search filter
-  const filteredCustomers = customers.filter(c => {
-    const term = leftSearchTerm.toLowerCase();
-    return c.number.toLowerCase().includes(term)
-      || (c.contact_name || "").toLowerCase().includes(term)
-      || (c.preview || "").toLowerCase().includes(term);
-  });
+  // apply left-pane search filter and sort
+  const filteredCustomers = customers
+    .filter(c => {
+      const term = leftSearchTerm.toLowerCase();
+      return c.number.toLowerCase().includes(term)
+        || (c.contact_name || "").toLowerCase().includes(term)
+        || (c.preview || "").toLowerCase().includes(term);
+    })
+    .sort((a, b) => {
+      const { key, direction } = leftSortConfig;
+      let aVal = a[key];
+      let bVal = b[key];
+      if (key === 'timestamp') {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+      } else {
+        // string comparison
+        aVal = (aVal || '').toString().toLowerCase();
+        bVal = (bVal || '').toString().toLowerCase();
+      }
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   return (
     <>
-    <div className="flex h-screen overflow-hidden gap-1 p-1">
-      {/* left pane */}
-      <div
-        ref={leftPaneRef}
-        className="w-80 bg-gray-50 dark:bg-gray-800 shadow-inner overflow-y-auto overflow-x-hidden px-1 py-1 box-border"
-      >
-        <div className="relative mb-4">
-          <input
-            type="text"
-            placeholder="Search number or preview…"
-            value={leftSearchTerm}
-            onChange={e => setLeftSearchTerm(e.target.value)}
-            className="w-full pr-8 p-2 border rounded shadow-sm focus:ring-2 focus:ring-blue-400"
-          />
-          {leftSearchTerm && (
-            <button
-              onClick={() => setLeftSearchTerm("")}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-red-600 font-bold"
-              aria-label="Clear search"
-              type="button"
-            >×</button>
-          )}
-        </div>
-        {filteredCustomers.map((c) => (
-          <div
-            key={c.number}
-            onClick={() => setSelectedNumber(c.number)}
-            className={`${c.number === selectedNumber
-              ? 'bg-white dark:bg-gray-600 shadow-md border border-transparent'
-              : 'bg-white dark:bg-gray-700 shadow-inner border border-transparent'
-            } flex justify-between items-center p-3 m-2 rounded-xl cursor-pointer transition duration-150 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200`}
-          >
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
-              {/* avatar */}
-              <img
-                src={defaultAvatar}
-                alt="avatar"
-                className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-blue-300 dark:ring-blue-500"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{c.contact_name || c.number}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-300 truncate">{c.preview}</div>
+    <div className="flex w-full h-full overflow-hidden m-0 p-0 pb-12 sm:pb-0">
+      {/* chat list pane */}
+      {(!isMobile || mobileView === "list") && (
+        <div
+          ref={leftPaneRef}
+          className="absolute inset-0 z-20 bg-gray-50 dark:bg-gray-800 overflow-y-auto overflow-x-hidden p-1 box-border sm:relative sm:inset-auto sm:z-auto sm:block sm:w-80"
+        >
+          <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 pt-2 pb-1 px-1 shadow-sm">
+            <div className="flex items-start space-x-2 px-2 mb-1">
+              {/* Back button moved here */}
+              {isMobile && (
+                <button
+                  onClick={() => navigate('/tenant/dashboard')}
+                  className="sm:hidden p-2 focus:outline-none"
+                  aria-label="Back"
+                >
+                  ←
+                </button>
+              )}
+              <div className="flex-1">
+                <span className="block text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">Recent Chats</span>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Showing only messages from the last 24 hours</p>
               </div>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-              {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <div ref={leftSortRef} className="flex items-center space-x-2 px-2 relative">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search number or preview…"
+                  value={leftSearchTerm}
+                  onChange={e => setLeftSearchTerm(e.target.value)}
+                  className="w-full pr-8 p-2 border rounded shadow-sm focus:ring-2 focus:ring-blue-400 text-xs sm:text-sm"
+                />
+                {leftSearchTerm && (
+                  <button
+                    onClick={() => setLeftSearchTerm("")}
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-600 font-bold"
+                    aria-label="Clear search"
+                    type="button"
+                  >×</button>
+                )}
+              </div>
+              <button
+                onClick={() => setLeftShowSortMenu(!leftShowSortMenu)}
+                className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none"
+                aria-label="Sort chats"
+              >
+                <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+              {leftShowSortMenu && (
+                <div className="absolute mt-10 right-2 bg-white dark:bg-gray-900 border rounded shadow p-2 z-40 w-40">
+                  {['contact_name','preview','timestamp'].map(key => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        const newDirection = leftSortConfig.key === key && leftSortConfig.direction === 'asc' ? 'desc' : 'asc';
+                        setLeftSortConfig({ key, direction: newDirection });
+                        setLeftShowSortMenu(false);
+                      }}
+                      className="flex justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                    >
+                      <span>{key === 'contact_name' ? 'Name' : key === 'preview' ? 'Preview' : 'Time'}</span>
+                      {leftSortConfig.key === key && (
+                        <span className="ml-1">{leftSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        ))}
-        {filteredCustomers.length === 0 && (
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
-            <svg className="w-12 h-12 mb-2 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M2 2h20v18H6l-4 4V2z" />
-            </svg>
-            <span className="text-lg">No messages found</span>
-          </div>
-        )}
-      </div>
+          {filteredCustomers.map((c) => (
+            <div
+              key={c.number}
+              onClick={() => { setSelectedNumber(c.number); if (isMobile) setMobileView("chat"); }}
+              className={`${c.number === selectedNumber
+                ? 'bg-white dark:bg-gray-600 shadow-md border border-transparent'
+                : 'bg-white dark:bg-gray-700 shadow-inner border border-transparent'
+              } flex justify-between items-center p-3 m-2 rounded-xl cursor-pointer transition duration-150 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200`}
+            >
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                {/* avatar */}
+                <img
+                  src={defaultAvatar}
+                  alt="avatar"
+                  className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-blue-300 dark:ring-blue-500"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{c.contact_name || c.number}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300 truncate">{c.preview}</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+                {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+          ))}
+          {filteredCustomers.length === 0 && (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
+              <svg className="w-12 h-12 mb-2 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2 2h20v18H6l-4 4V2z" />
+              </svg>
+              <span className="text-lg">No messages found</span>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* right pane */}
-      <div
-        ref={rightPaneRef}
-        className="flex-1 flex flex-col p-1 bg-white dark:bg-gray-800 shadow-inner rounded-lg"
-      >
+      {/* chat conversation pane */}
+      {(!isMobile || mobileView === "chat") && (
+        <div
+          ref={rightPaneRef}
+          onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+          onTouchEnd={e => {
+            setTouchEndX(e.changedTouches[0].clientX);
+            if (e.changedTouches[0].clientX - touchStartX > 100) {
+              setMobileView("list");
+            }
+          }}
+          className="absolute inset-0 z-10 bg-white dark:bg-gray-800 flex flex-col h-full overflow-hidden p-0 box-border sm:relative sm:inset-auto sm:z-auto sm:flex-1"
+        >
         {selectedNumber ? (
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow-sm relative">
-            <div className="flex items-center space-x-3">
-                <button onClick={() => setIsCustomerModalOpen(true)} className="focus:outline-none">
-                  <img src={defaultAvatar} alt="avatar" className="w-8 h-8 rounded-full mr-3 object-cover ring-2 ring-blue-300 dark:ring-blue-500"/>
+          <div className="flex flex-col flex-1 h-full min-h-0">
+            <div className="flex-shrink-0 flex items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow-sm relative">
+              <div className="flex items-center space-x-2 min-w-0">
+                {isMobile && (
+                  <button
+                    onClick={() => setMobileView("list")}
+                    className="sm:hidden p-2 focus:outline-none text-lg"
+                    aria-label="Back to chats"
+                  >
+                    ←
+                  </button>
+                )}
+                <button onClick={() => setIsCustomerModalOpen(true)} className="focus:outline-none flex-shrink-0">
+                  <img
+                    src={defaultAvatar}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-blue-300 dark:ring-blue-500"
+                  />
                 </button>
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                  Chat with {customers.find(c => c.number === selectedNumber)?.contact_name || selectedNumber}
+                <h2 className="flex-1 text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {customers.find(c => c.number === selectedNumber)?.contact_name || selectedNumber}
                 </h2>
               </div>
               <div className="flex-none flex items-center space-x-2">
-                {/* Search toggle / input */}
+                {/* Search toggle / input (sort removed) */}
                 {!searchOpen ? (
                   <button
                     onClick={() => setSearchOpen(true)}
@@ -497,26 +618,52 @@ export default function Messages() {
                     🔍
                   </button>
                 ) : (
-                  <div className="w-56 relative transition-all duration-200">
+                  <div ref={sortContainerRef} className="relative flex items-center space-x-1 transition-all duration-200">
                     <input
                       type="text"
                       placeholder="Search..."
                       autoFocus
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full pr-8 p-1 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="flex-1 pr-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring text-xs sm:text-sm"
                     />
                     <button
-                      onClick={() => {
-                        setSearchTerm("");
-                        setSearchOpen(false);
-                      }}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-red-600 font-bold text-2xl leading-none focus:outline-none"
+                      onClick={() => { setSearchTerm(''); setSearchOpen(false); }}
+                      className="p-1 text-red-600 font-bold text-lg focus:outline-none"
                       aria-label="Clear search"
-                      type="button"
                     >
                       ×
                     </button>
+                    <button
+                      onClick={() => setShowSortMenu(!showSortMenu)}
+                      className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none ml-1"
+                      aria-label="Sort messages"
+                      type="button"
+                    >
+                      <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                    </button>
+                    {showSortMenu && (
+                      <div className="absolute mt-10 right-0 bg-white dark:bg-gray-900 border rounded shadow p-2 z-40 w-40">
+                        {['timestamp','type','content'].map(key => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              const newDirection = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+                              setSortConfig({ key, direction: newDirection });
+                              setShowSortMenu(false);
+                            }}
+                            className="flex justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                          >
+                            <span>
+                              {key === 'timestamp' ? 'Time' : key === 'type' ? 'Sender' : 'Content'}
+                            </span>
+                            {sortConfig.key === key && (
+                              <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -552,9 +699,8 @@ export default function Messages() {
                 )}
 
                 <Menu as="div" className="relative inline-block text-left ml-2">
-                  <Menu.Button className="inline-flex justify-center items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    Export
-                    <FiFileText className="ml-2 h-4 w-4" />
+                  <Menu.Button className="inline-flex justify-center items-center p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <FiFileText className="h-5 w-5" />
                   </Menu.Button>
                   <Transition
                     as={Fragment}
@@ -604,13 +750,22 @@ export default function Messages() {
             <div
               ref={scrollRef}
               onScroll={handleChatScroll}
-              className="flex-1 overflow-y-auto space-y-3 px-2 py-1 relative"
+              className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-1 relative min-h-0"
             >
               {chatHistory
                 .filter(m => {
                   const matchesText = (m.content || "").toLowerCase().includes(searchTerm.toLowerCase());
                   const matchesDate = !selectedDate || m.timestamp.slice(0,10) === selectedDate;
                   return matchesText && matchesDate;
+                })
+                .sort((a, b) => {
+                  if (sortConfig.key) {
+                    let aVal = sortConfig.key === 'timestamp' ? new Date(a[sortConfig.key]) : (a[sortConfig.key] || '').toString().toLowerCase();
+                    let bVal = sortConfig.key === 'timestamp' ? new Date(b[sortConfig.key]) : (b[sortConfig.key] || '').toString().toLowerCase();
+                    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                  }
+                  return new Date(a.timestamp) - new Date(b.timestamp);
                 })
                 .map((m) => {
                   // Alignment: only type === "customer" is left; all others right
@@ -672,8 +827,8 @@ export default function Messages() {
                           </>
                         )}
                         {/* Always show the message content, if any */}
-                        {m.content && <p className="text-sm">{m.content}</p>}
-                        <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5 text-right">
+                        {m.content && <p className="text-sm sm:text-base">{m.content}</p>}
+                        <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 text-right">
                           {new Date(m.timestamp).toLocaleString([], {
                             hour: "2-digit", minute: "2-digit", month: "short", day: "numeric"
                           })}
@@ -708,9 +863,9 @@ export default function Messages() {
                 ) : false ? (
                   <audio controls src={pendingMediaPreview} className="max-w-xs" />
                 ) : pendingMedia.type === "application/pdf" ? (
-                  <span className="text-sm text-gray-700">PDF ready to send: {pendingMedia.name}</span>
+                  <span className="text-sm sm:text-base text-gray-700">PDF ready to send: {pendingMedia.name}</span>
                 ) : (
-                  <span className="text-sm text-gray-700">File ready: {pendingMedia.name}</span>
+                  <span className="text-sm sm:text-base text-gray-700">File ready: {pendingMedia.name}</span>
                 )}
                 <button
                   onClick={() => { setPendingMedia(null); setPendingMediaPreview(null); }}
@@ -720,57 +875,63 @@ export default function Messages() {
                 >×</button>
               </div>
             )}
-            <div className="p-2 border-t flex items-center space-x-2">
-              {!isRecording ? (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && sendMessage()}
-                    className="flex-1 border rounded px-3 py-1 focus:outline-none"
-                  />
-                  <button
-                    onClick={startRecording}
-                    className="p-2 rounded hover:bg-gray-200"
-                    aria-label="Record voice"
-                    title="Record voice"
-                  >🎤</button>
-                  <input
-                    type="file"
-                    accept="image/*,audio/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current.click()}
-                    className="p-2 rounded hover:bg-gray-200"
-                    aria-label="Attach file"
-                  >📎</button>
-                  <button
-                    onClick={sendMessage}
-                    disabled={isSending}
-                    className={`px-3 py-1 ${isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded`}
-                  >
-                    {isSending ? 'Sending...' : 'Send'}
-                  </button>
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-between border rounded px-3 py-1">
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                    <div className="animate-pulse w-4 h-4 bg-red-500 rounded-full"></div>
-                    <span className="font-mono">⏺ {recordingDuration}s</span>
-                  </div>
-                  <button
-                    onClick={stopRecording}
-                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
-                  >
-                    Send
-                  </button>
-                </div>
-              )}
+            <div className="flex-shrink-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center space-x-3">
+              <>
+                {!isRecording ? (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={e => setNewMessage(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && sendMessage()}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none"
+                    />
+                    <button
+                      onClick={() => startRecording()}
+                      aria-label="Start recording"
+                      className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full shadow hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none"
+                    >
+                      <MicrophoneIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*,audio/*"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current.click()}
+                      className="p-2 rounded hover:bg-gray-200"
+                      aria-label="Attach file"
+                    >📎</button>
+                    <button
+                      onClick={sendMessage}
+                      disabled={isSending || !newMessage.trim()}
+                      aria-label="Send message"
+                      className={`p-3 rounded-full shadow ${
+                        isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                      } text-white focus:outline-none`}
+                    >
+                      <PaperAirplaneIcon className="w-5 h-5" style={{ transform: "rotate(360deg)" }} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Waveform animation placeholder */}
+                    <div className="flex-1 h-10 bg-blue-200 rounded-full animate-pulse" />
+                    {/* Send button now stops recording */}
+                    <button
+                      onClick={stopRecording}
+                      aria-label="Stop recording and send"
+                      className="p-3 bg-red-500 rounded-full shadow hover:bg-red-600 focus:outline-none text-white"
+                    >
+                      <PaperAirplaneIcon className="w-5 h-5" style={{ transform: "rotate(360deg)" }} />
+                    </button>
+                  </>
+                )}
+              </>
             </div>
           </div>
         ) : (
@@ -779,7 +940,35 @@ export default function Messages() {
           </div>
         )}
       </div>
+      )}
     </div>
+    {/* mobile bottom nav */}
+    {isMobile && (
+      <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-800 border-t flex">
+        <button
+          onClick={() => navigate('/tenant/dashboard')}
+          className="flex-1 py-2 text-center"
+          aria-label="Home"
+        >
+          🏠
+        </button>
+        <button
+          onClick={() => setMobileView("list")}
+          className={`flex-1 py-2 text-center ${mobileView === "list" ? "bg-gray-100 dark:bg-gray-700" : ""}`}
+          aria-label="Chats"
+        >
+          💬
+        </button>
+        <button
+          onClick={() => setMobileView("chat")}
+          disabled={!selectedNumber}
+          className={`flex-1 py-2 text-center ${mobileView === "chat" ? "bg-gray-100 dark:bg-gray-700" : ""} ${!selectedNumber ? "opacity-50" : ""}`}
+          aria-label="Conversation"
+        >
+          📨
+        </button>
+      </div>
+    )}
     {/* Image Preview Modal */}
     {imagePreviewUrl && (
       <Transition show={!!imagePreviewUrl} as={Fragment}>
@@ -838,7 +1027,7 @@ export default function Messages() {
             >
               ×
             </button>
-            <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Dialog.Title className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Customer Details
             </Dialog.Title>
             <div className="flex flex-col items-center space-y-2">
@@ -848,10 +1037,10 @@ export default function Messages() {
                 className="w-20 h-20 rounded-full object-cover ring-2 ring-blue-300 dark:ring-blue-500"
               />
               <div className="text-center">
-                <div className="text-base font-medium text-gray-900 dark:text-gray-100">
+                <div className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
                   {customers.find(c => c.number === selectedNumber)?.contact_name || selectedNumber}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   {selectedNumber}
                 </div>
               </div>

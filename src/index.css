@@ -7,5 +7,14 @@ html {
 }
 
 body {
-  @apply bg-gray-50 dark:bg-gray-900 text-textDark dark:text-textLight antialiased font-sans;
+  @apply bg-transparent dark:bg-transparent text-textDark dark:text-textLight antialiased font-sans;
+}
+
+/* Reset default margins and ensure full-viewport usage */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent any page-level scroll */
 }
