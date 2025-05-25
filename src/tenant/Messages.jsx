@@ -30,6 +30,226 @@ export default function Messages() {
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
 
+  // auto-scroll to bottom when chatHistory updates
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  // Image preview modal state
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+
+  // for message input and file attachments
+  const [newMessage, setNewMessage] = useState("");
+  const fileInputRef = useRef(null);
+  // Attachment preview/caption state
+  const [pendingMedia, setPendingMedia] = useState(null);
+  const [pendingMediaPreview, setPendingMediaPreview] = useState(null);
+  // voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [recordingStartTime, setRecordingStartTime] = useState(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
+  // scroll-to-bottom arrow state
+  const [showScrollDown, setShowScrollDown] = useState(false);
+
+  // Sending state to prevent duplicate sends
+  const [isSending, setIsSending] = useState(false);
+
+  // Portal tenant name from profiles table
+  const [portalUserName, setPortalUserName] = useState("");
+  useEffect(() => {
+    if (!workflow) return;
+    supabase
+      .from("profiles")
+      .select("customer_name")
+      .eq("workflow_name", workflow)
+      .single()
+      .then(({ data, error }) => {
+        if (data?.customer_name) setPortalUserName(data.customer_name);
+        else setPortalUserName("");
+      });
+  }, [workflow]);
+  // handler for scroll-to-bottom arrow
+  const handleChatScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 50);
+  };
+  // send text message or file/caption
+  const sendMessage = async () => {
+    if (isSending || (!newMessage.trim() && !pendingMedia)) return;
+    setIsSending(true);
+    // Ensure selectedNumber and workflow are always present
+    if (!selectedNumber || !workflow) {
+      alert("Select a customer and ensure workflow is loaded.");
+      setIsSending(false);
+      return;
+    }
+    const customer = customers.find(c => c.number === selectedNumber);
+    const contactName = customer?.contact_name || selectedNumber || "Unknown";
+    let media_url = null;
+    let fileType = null;
+
+    // Handle file upload if present
+    if (pendingMedia) {
+      const ext = pendingMedia.name.split('.').pop();
+      const fileName = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase
+        .storage.from("attachments")
+        .upload(fileName, pendingMedia);
+      if (uploadError) {
+        console.error("Upload error:", uploadError, { fileName, file: pendingMedia });
+        alert("Upload failed: " + uploadError.message);
+        setIsSending(false);
+        return;
+      }
+      const { data: urlData } = supabase
+        .storage.from("attachments")
+        .getPublicUrl(fileName);
+      media_url = urlData.publicUrl;
+      if (pendingMedia.type.startsWith("image/")) fileType = "image";
+      else if (pendingMedia.type.startsWith("audio/")) fileType = "audio";
+      else if (pendingMedia.type === "application/pdf") fileType = "pdf";
+      else fileType = "file";
+    }
+
+    // Build the message object
+    const newMsg = {
+      timestamp: new Date().toISOString(),
+      number: selectedNumber,
+      content: newMessage.trim() || "", // always string
+      type: fileType || portalUserName,
+      contact_name: contactName,
+      workflow_name: workflow,
+      media_url: media_url || null,
+    };
+
+    // Insert to Supabase
+    const { error, data } = await supabase.from("messages").insert([newMsg]).select();
+    if (error) {
+      alert("Failed to send: " + error.message);
+      console.error("Supabase insert error:", error);
+      setIsSending(false);
+      return;
+    }
+    setChatHistory(prev => [
+      ...prev,
+      { ...newMsg, id: data?.[0]?.id || Math.random().toString(36).substr(2, 9) }
+    ]);
+    setNewMessage("");
+    setPendingMedia(null);
+    setPendingMediaPreview(null);
+    setIsSending(false);
+  };
+
+  // handle file attachment, show preview but don't upload yet
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingMedia(file);
+    setPendingMediaPreview(URL.createObjectURL(file));
+    // Don't upload or send yet!
+  };
+
+  // Start recording (prefer .mp3 if supported, else fallback)
+  const startRecording = async () => {
+    if (!navigator.mediaDevices) {
+      alert("Audio recording is not supported in this browser.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mp3Mime = 'audio/mpeg';
+      const mimeType = MediaRecorder.isTypeSupported(mp3Mime) ? mp3Mime : '';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        recorder.stream.getTracks().forEach(track => track.stop());
+        if (!chunks.length) return;
+        setIsRecording(false);
+        clearInterval(intervalId);
+        setRecordingDuration(0);
+        const type = recorder.mimeType;
+        let ext = 'mp3';
+        const blob = new Blob(chunks, { type });
+        if (blob.size < 100) {
+          alert("Recording failed or too short.");
+          return;
+        }
+
+        setIsSending(true);
+        const fileName = `attachments/audio_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase
+          .storage.from("attachments")
+          .upload(fileName, blob);
+        if (uploadError) {
+          alert("Upload failed: " + uploadError.message);
+          setIsSending(false);
+          return;
+        }
+
+        const { data: urlData } = supabase
+          .storage.from("attachments")
+          .getPublicUrl(fileName);
+
+        const customer = customers.find(c => c.number === selectedNumber);
+        const contactName = customer?.contact_name || selectedNumber || "Unknown";
+        await supabase.from("messages").insert([{
+          timestamp: new Date().toISOString(),
+          number: selectedNumber,
+          content: "",
+          type: "audio",
+          contact_name: contactName,
+          workflow_name: workflow,
+          media_url: urlData.publicUrl,
+        }]);
+        setIsSending(false);
+      };
+
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+      // Correct timer: avoid stale recordingStartTime, use local start variable
+      const start = Date.now();
+      setRecordingStartTime(start);
+      setRecordingDuration(0);
+      setIntervalId(setInterval(() => {
+        setRecordingDuration(Math.floor((Date.now() - start) / 1000));
+      }, 1000));
+      recorder.start();
+      setTimeout(() => {
+        if (recorder.state !== "inactive") {
+          recorder.stop();
+          stream.getTracks().forEach(track => track.stop());
+        }
+      }, 30000);
+    } catch (err) {
+      alert("Microphone error: " + err.message);
+    }
+  };
+
+  // Stop recording
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
   const exportCSV = () => {
     const rows = chatHistory
       .filter(m => !selectedDate || m.timestamp.slice(0,10) === selectedDate)
@@ -118,6 +338,67 @@ export default function Messages() {
       .eq("number", selectedNumber)
       .order("timestamp", { ascending: true })
       .then(({ data }) => setChatHistory(data));
+  }, [workflow, selectedNumber]);
+
+  // subscribe to new messages in real-time (Supabase v2)
+  useEffect(() => {
+    if (!workflow || !selectedNumber) return;
+    const channel = supabase
+      .channel(`messages_${workflow}_${selectedNumber}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `workflow_name=eq.${workflow},number=eq.${selectedNumber}`,
+        },
+        (payload) => {
+          setChatHistory((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [workflow, selectedNumber]);
+
+  // Refetch chat history when window/tab regains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!workflow || !selectedNumber) return;
+      supabase
+        .from("messages")
+        .select("*")
+        .eq("workflow_name", workflow)
+        .eq("number", selectedNumber)
+        .order("timestamp", { ascending: true })
+        .then(({ data }) => {
+          if (data) setChatHistory(data);
+        })
+        .catch((err) => console.error("Refetch on focus error:", err));
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [workflow, selectedNumber]);
+
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    if (!workflow || !selectedNumber) return;
+    const intervalId = setInterval(() => {
+      supabase
+        .from("messages")
+        .select("*")
+        .eq("workflow_name", workflow)
+        .eq("number", selectedNumber)
+        .order("timestamp", { ascending: true })
+        .then(({ data }) => {
+          if (data) setChatHistory(data);
+        })
+        .catch((err) => console.error("Polling error:", err));
+    }, 5000);
+    return () => clearInterval(intervalId);
   }, [workflow, selectedNumber]);
 
   // apply left-pane search filter
@@ -318,33 +599,178 @@ export default function Messages() {
                     </Menu.Items>
                   </Transition>
                 </Menu>
-              </div>
+              </div> 
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 px-2 py-1">
+            <div
+              ref={scrollRef}
+              onScroll={handleChatScroll}
+              className="flex-1 overflow-y-auto space-y-3 px-2 py-1 relative"
+            >
               {chatHistory
                 .filter(m => {
-                  const matchesText = m.content.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesText = (m.content || "").toLowerCase().includes(searchTerm.toLowerCase());
                   const matchesDate = !selectedDate || m.timestamp.slice(0,10) === selectedDate;
                   return matchesText && matchesDate;
                 })
-                .map((m) => (
-                  <div key={m.id} className={`flex mb-2 ${m.type === "bot" ? "justify-end" : "justify-start"}`}>
+                .map((m) => {
+                  // Alignment: only type === "customer" is left; all others right
+                  const isCustomer = m.type === "customer";
+                  // Bubble color: customer = white (left), bot = green, all others = blue (right)
+                  const bubbleClass = m.type === "customer"
+                    ? "bg-white text-gray-900 dark:text-gray-100 rounded-tl-lg rounded-tr-lg rounded-br-lg"
+                    : m.type === "bot"
+                      ? "bg-[#d9fdd2] text-gray-900 rounded-tl-lg rounded-tr-lg rounded-bl-lg"
+                      : "bg-blue-100 text-gray-900 rounded-tl-lg rounded-tr-lg rounded-bl-lg";
+                  return (
                     <div
-                      className={`max-w-[70%] px-3 py-1 shadow break-words whitespace-normal ${
-                        m.type === "bot"
-                          ? "bg-[#d9fdd2] text-gray-900 rounded-tr-lg rounded-br-lg rounded-bl-lg"
-                          : "bg-white text-gray-900 dark:text-gray-100 rounded-tl-lg rounded-tr-lg rounded-br-lg"
-                      }`}
+                      key={m.id}
+                      className={`flex mb-2 ${isCustomer ? "justify-start" : "justify-end"}`}
                     >
-                      <p className="text-sm">{m.content}</p>
-                      <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5 text-right">
-                        {new Date(m.timestamp).toLocaleString([], {
-                          hour: "2-digit", minute: "2-digit", month: "short", day: "numeric"
-                        })}
+                      <div
+                        className={`max-w-[90%] px-3 py-1 shadow break-words whitespace-normal ${bubbleClass}`}
+                      >
+                        {/* MEDIA PREVIEW SECTION */}
+                        {m.media_url && (
+                          <>
+                            {/* Image Preview */}
+                            {m.media_url.match(/\.(jpeg|jpg|png|gif|bmp|webp)$/i) && (
+                              <img
+                                src={m.media_url}
+                                alt="attachment"
+                                className={`max-w-xs max-h-48 rounded mb-2 border cursor-pointer transition-transform hover:scale-105 ${isCustomer ? "" : "ml-auto"}`}
+                                onClick={() => setImagePreviewUrl(m.media_url)}
+                              />
+                            )}
+                            {/* Video Preview */}
+                            {m.media_url.match(/\.(mp4|webm|ogg)$/i) && (
+                              <video
+                                src={m.media_url}
+                                controls
+                                className={`max-w-xs max-h-48 rounded mb-2 border ${isCustomer ? "" : "ml-auto"}`}
+                              />
+                            )}
+                            {/* Audio Preview */}
+                            {m.media_url.match(/\.(ogg|mp3|wav|aac|m4a)$/i) && !m.content && (
+  <audio
+    src={m.media_url}
+    controls
+    className="w-full rounded-md"
+    style={{ height: "40px", minWidth: "320px", maxWidth: "720px" }}
+  />
+)}
+                            {/* PDF Preview/Download */}
+                            {m.media_url.match(/\.pdf$/i) && (
+                              <a
+                                href={m.media_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline mb-2 block"
+                              >
+                                📄 Open PDF
+                              </a>
+                            )}
+                          </>
+                        )}
+                        {/* Always show the message content, if any */}
+                        {m.content && <p className="text-sm">{m.content}</p>}
+                        <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5 text-right">
+                          {new Date(m.timestamp).toLocaleString([], {
+                            hour: "2-digit", minute: "2-digit", month: "short", day: "numeric"
+                          })}
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              {showScrollDown && (
+                <button
+                  onClick={() => {
+                    const el = scrollRef.current;
+                    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+                    setShowScrollDown(false);
+                  }}
+                  className="fixed inset-x-0 mx-auto bottom-28 z-30 flex justify-center w-fit bg-blue-500 text-white rounded-full shadow-lg p-3 opacity-90 hover:opacity-100 transition-all"
+                  style={{ left: '50%', transform: 'translateX(-50%)' }}
+                  title="Scroll to latest message"
+                  aria-label="Scroll to bottom"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {/* Attachment preview area */}
+            {pendingMediaPreview && (
+              <div className="flex items-center space-x-2 mb-2 border p-2 rounded bg-gray-50 relative">
+                {pendingMedia.type.startsWith("image/") ? (
+                  <img src={pendingMediaPreview} alt="preview" className="max-h-32 rounded" />
+                ) : false ? (
+                  <audio controls src={pendingMediaPreview} className="max-w-xs" />
+                ) : pendingMedia.type === "application/pdf" ? (
+                  <span className="text-sm text-gray-700">PDF ready to send: {pendingMedia.name}</span>
+                ) : (
+                  <span className="text-sm text-gray-700">File ready: {pendingMedia.name}</span>
+                )}
+                <button
+                  onClick={() => { setPendingMedia(null); setPendingMediaPreview(null); }}
+                  className="ml-2 text-red-500 hover:text-red-700 font-bold"
+                  aria-label="Remove file"
+                  title="Remove file"
+                >×</button>
+              </div>
+            )}
+            <div className="p-2 border-t flex items-center space-x-2">
+              {!isRecording ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && sendMessage()}
+                    className="flex-1 border rounded px-3 py-1 focus:outline-none"
+                  />
+                  <button
+                    onClick={startRecording}
+                    className="p-2 rounded hover:bg-gray-200"
+                    aria-label="Record voice"
+                    title="Record voice"
+                  >🎤</button>
+                  <input
+                    type="file"
+                    accept="image/*,audio/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="p-2 rounded hover:bg-gray-200"
+                    aria-label="Attach file"
+                  >📎</button>
+                  <button
+                    onClick={sendMessage}
+                    disabled={isSending}
+                    className={`px-3 py-1 ${isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded`}
+                  >
+                    {isSending ? 'Sending...' : 'Send'}
+                  </button>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-between border rounded px-3 py-1">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                    <div className="animate-pulse w-4 h-4 bg-red-500 rounded-full"></div>
+                    <span className="font-mono">⏺ {recordingDuration}s</span>
                   </div>
-                ))}
+                  <button
+                    onClick={stopRecording}
+                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                  >
+                    Send
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -354,6 +780,37 @@ export default function Messages() {
         )}
       </div>
     </div>
+    {/* Image Preview Modal */}
+    {imagePreviewUrl && (
+      <Transition show={!!imagePreviewUrl} as={Fragment}>
+        <Dialog
+          onClose={() => setImagePreviewUrl(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
+            leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-0" />
+          </Transition.Child>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95"
+          >
+            <Dialog.Panel className="relative z-10 bg-white dark:bg-gray-900 rounded-lg shadow-xl p-4 max-w-lg w-full">
+              <img src={imagePreviewUrl} alt="Preview" className="w-full max-h-[70vh] object-contain rounded"/>
+              <button
+                onClick={() => setImagePreviewUrl(null)}
+                className="absolute top-2 right-2 text-gray-300 hover:text-white bg-black bg-opacity-50 rounded-full px-3 py-1 font-bold"
+                aria-label="Close image preview"
+              >×</button>
+            </Dialog.Panel>
+          </Transition.Child>
+        </Dialog>
+      </Transition>
+    )}
     {/* Customer Info Modal */}
     <Transition show={isCustomerModalOpen} as={Fragment}>
       <Dialog
