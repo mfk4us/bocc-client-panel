@@ -123,6 +123,15 @@ export const translations = {
     copy: "Copy",
     copied: "Copied!",
     returnToTop: "Return to Top",
+
+    // Message Center Page
+    messageCenter: "Message Center",
+    sendSingleInvite: "Send single invite",
+    bulkUpload: "Bulk upload",
+    businessInitiatedCount: "Business-initiated in last 24 hrs:",
+    send: "Send",
+    sending: "Sending...",
+    uploadAndSend: "Upload & Send",
   },
 
   ar: {
@@ -243,6 +252,15 @@ export const translations = {
     copy: "نسخ",
     copied: "تم النسخ!",
     returnToTop: "العودة للأعلى",
+
+    // Message Center Page
+    messageCenter: "مركز الرسائل",
+    sendSingleInvite: "إرسال دعوة واحدة",
+    bulkUpload: "الإرسال بالجملة",
+    businessInitiatedCount: "المحادثات المباشرة في آخر 24 ساعة:",
+    send: "إرسال",
+    sending: "جارٍ الإرسال...",
+    uploadAndSend: "رفع وإرسال",
   },
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ArrowsUpDownIcon, MicrophoneIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { Fragment } from 'react';
 import { FiFileText, FiFile, FiFilePlus } from 'react-icons/fi';
@@ -73,6 +73,16 @@ export default function Messages() {
     // eslint-disable-next-line
   }, []);
   const navigate = useNavigate();
+  const location = useLocation();
+  // Parse 'number' from query string and set selectedNumber
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const num = params.get('number');
+    if (num) {
+      setSelectedNumber(num);
+    }
+  }, [location.search]);
+
   // for swipe gesture on mobile
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);

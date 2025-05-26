@@ -19,6 +19,7 @@ import Bookings from "./tenant/Bookings";
 import Analytics from "./tenant/Analytics";
 import NotificationSettings from "./tenant/NotificationSettings";
 import Team from "./tenant/Team";
+import SendMessages from "./tenant/SendMessages";
 
 export default function App() {
   const [role, setRole] = useState(null);
@@ -60,6 +61,7 @@ export default function App() {
                     <Route path="/tenant/analytics" element={<Analytics language={language} />} />
                     <Route path="/tenant/notifications" element={<NotificationSettings language={language} />} />
                     <Route path="/tenant/team" element={<Team language={language} />} />
+                    <Route path="/tenant/send-messages" element={<SendMessages language={language} />} />
                     <Route path="/tenant/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
                   </>
                 ) : (

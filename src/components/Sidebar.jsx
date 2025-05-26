@@ -41,6 +41,7 @@ export default function Sidebar({ role }) {
     analytics: lang("analytics"),
     notifications: lang("notifications"),
     team: lang("team"),
+    sendMessages: language === "ar" ? "مركز الرسائل" : "Message Center",
   };
   const [theme, setTheme] = useState("light");
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -154,11 +155,12 @@ export default function Sidebar({ role }) {
       analytics: "/tenant/analytics",
       notifications: "/tenant/notifications",
       team: "/tenant/team",
+      sendMessages: "/tenant/send-messages",
     };
 
     const currentPath = location.pathname;
     const allowed = Object.entries(allowedPaths).find(
-      ([key, path]) => tenantPages[key] && currentPath === path
+      ([key, path]) => (key === "sendMessages" || tenantPages[key]) && currentPath === path
     );
 
     if (!allowed) {
@@ -212,6 +214,7 @@ export default function Sidebar({ role }) {
         tenantPages.analytics && { label: currentLang.analytics, path: "/tenant/analytics", icon: DocumentChartBarIcon },
         tenantPages.notifications && { label: currentLang.notifications, path: "/tenant/notifications", icon: BellIcon },
         tenantPages.team && { label: currentLang.team, path: "/tenant/team", icon: UserGroupIcon },
+        { label: currentLang.sendMessages, path: "/tenant/send-messages", icon: ChatBubbleLeftRightIcon },
       ].filter(Boolean) : [];
 
   const toggleLang = () => {
