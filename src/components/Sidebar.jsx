@@ -64,13 +64,23 @@ export default function Sidebar({ role }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Detect mobile (width < 768)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Detect mobile/tablet/TV vs desktop
+  function detectMobileUI() {
+    const ua = navigator.userAgent;
+    const isTablet = /iPad|Android(?!.*Mobile)|Tablet|PlayBook|Silk/i.test(ua);
+    const isMobile = /Mobi|Android|iPhone|BlackBerry|Opera Mini|IEMobile/i.test(ua);
+    const isTV = /SmartTV|AppleTV|GoogleTV|Roku|Xbox|PlayStation/i.test(ua);
+    return isMobile || isTablet || isTV;
+  }
+  const [isMobileUI, setIsMobileUI] = useState(detectMobileUI());
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
+    const onResize = () => {
+      const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 768;
+      setIsMobileUI(detectMobileUI() || smallScreen);
+    };
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const location = useLocation();
@@ -243,9 +253,10 @@ export default function Sidebar({ role }) {
   const isCustomers = useMatch({ path: "/tenant/customers", end: true });
   // Detect individual chat-history pages
   const isMessageDetail = !!useMatch({ path: "/tenant/messages/:id", end: true });
+  const isSendMessages = !!useMatch({ path: "/tenant/send-messages", end: true });
 
-  // show bottom nav only on mobile for dashboard or customers (hide on any messages routes)
-  if (isMobile && !isMessageDetail && (isDashboard || isCustomers)) {
+  // show bottom nav only on mobile for dashboard, customers, or send-messages (hide on any messages routes)
+  if (isMobileUI && !isMessageDetail && (isDashboard || isCustomers || isSendMessages)) {
     return (
       <>
       <nav className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 sm:py-3 z-50">
@@ -310,8 +321,8 @@ export default function Sidebar({ role }) {
 
   console.log("Sidebar links to render:", links);
 
-  // Hide sidebar on phone portrait for any messages page
-  if (isMobile && isPortrait && location.pathname.startsWith("/tenant/messages")) {
+  // Hide sidebar on any mobile UI for any messages page
+  if (isMobileUI && location.pathname.startsWith("/tenant/messages")) {
     return null;
   }
 

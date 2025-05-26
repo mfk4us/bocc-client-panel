@@ -113,7 +113,7 @@ export default function SendMessages({ language }) {
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
         {lang("messageCenter")}
       </h1>
 
@@ -128,31 +128,31 @@ export default function SendMessages({ language }) {
       )}
 
       <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("sendSingleInvite")}</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("sendSingleInvite")}</h2>
         <div>
           <input
             type="tel"
             placeholder="05XXXXXXXX"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
           />
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded" onClick={handleSendSingle} disabled={loading}>
+          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-sm sm:text-base text-white font-medium rounded" onClick={handleSendSingle} disabled={loading}>
             {loading ? lang("sending") : lang("send")}
           </button>
         </div>
       </section>
 
       <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("bulkUpload")}</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("bulkUpload")}</h2>
         <div>
           <input
             type="file"
             accept=".csv"
             onChange={(e) => setFile(e.target.files[0])}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
           />
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded" onClick={handleSendBulk} disabled={loading}>
+          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-sm sm:text-base text-white font-medium rounded" onClick={handleSendBulk} disabled={loading}>
             {loading ? lang("sending") : lang("uploadAndSend")}
           </button>
         </div>

@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+// Detect mobile/tablet/TV vs desktop
+function detectMobileUI() {
+  const ua = navigator.userAgent;
+  const isTablet = /iPad|Android(?!.*Mobile)|Tablet|PlayBook|Silk/i.test(ua);
+  const isMobile = /Mobi|Android|iPhone|BlackBerry|Opera Mini|IEMobile/i.test(ua);
+  const isTV = /SmartTV|AppleTV|GoogleTV|Roku|Xbox|PlayStation/i.test(ua);
+  return isMobile || isTablet || isTV;
+}
 import { ArrowsUpDownIcon, MicrophoneIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Transition, Dialog } from '@headlessui/react';
@@ -55,21 +63,17 @@ export default function Messages() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSortMenu]);
 
-  // Treat screens <= 766px as mobile for both portrait and landscape modes
-  const MOBILE_MAX_WIDTH = 766;
-  // mobile view: for <= 766px, always show only chat list (single pane)
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= MOBILE_MAX_WIDTH);
+  const [isMobileUI, setIsMobileUI] = useState(detectMobileUI());
+
   useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth <= MOBILE_MAX_WIDTH;
-      setIsSmallScreen(isMobile);
-      // When resizing to mobile, default to list view
-      if (isMobile) setMobileView("list");
-      // When resizing to desktop, show both panes
-      else setMobileView("list");
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    function onResize() {
+      const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 768;
+      setIsMobileUI(detectMobileUI() || smallScreen);
+      if (!smallScreen) setMobileView("list");
+    }
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
     // eslint-disable-next-line
   }, []);
   const navigate = useNavigate();
@@ -486,14 +490,14 @@ export default function Messages() {
       ref={leftPaneRef}
       className={`
         absolute inset-0 z-20 bg-gray-50 dark:bg-gray-800 overflow-y-auto overflow-x-hidden p-1 box-border
-        ${isSmallScreen ? 'w-full max-w-full min-h-screen flex flex-col' : 'sm:relative sm:inset-auto sm:z-auto sm:block sm:w-80'}
+        ${isMobileUI ? 'w-full max-w-full min-h-screen flex flex-col' : 'sm:relative sm:inset-auto sm:z-auto sm:block sm:w-80'}
       `}
-      style={isSmallScreen ? { minHeight: "100vh" } : {}}
+      style={isMobileUI ? { minHeight: "100vh" } : {}}
     >
       <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 pt-2 pb-1 px-1 shadow-sm">
         <div className="flex items-start space-x-2 px-2 mb-1">
           {/* Back button: show only on small screens (<=767px width) and only if in chat view */}
-          {isSmallScreen && mobileView === "chat" && (
+          {isMobileUI && mobileView === "chat" && (
             <button
               onClick={() => setMobileView("list")}
               className="p-2 focus:outline-none"
@@ -503,7 +507,7 @@ export default function Messages() {
             </button>
           )}
           {/* On mobile, in list view, show back to dashboard button */}
-          {isSmallScreen && mobileView === "list" && (
+          {isMobileUI && mobileView === "list" && (
             <button
               onClick={() => navigate('/tenant/dashboard')}
               className="p-2 focus:outline-none"
@@ -575,7 +579,7 @@ export default function Messages() {
           key={c.number}
           onClick={() => {
             setSelectedNumber(c.number);
-            if (isSmallScreen) setMobileView("chat");
+            if (isMobileUI) setMobileView("chat");
           }}
           className={`${c.number === selectedNumber
             ? 'bg-white dark:bg-gray-600 shadow-md border border-transparent'
@@ -617,7 +621,7 @@ export default function Messages() {
       onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
       onTouchEnd={e => {
         setTouchEndX(e.changedTouches[0].clientX);
-        if (isSmallScreen && e.changedTouches[0].clientX - touchStartX > 100) {
+        if (isMobileUI && e.changedTouches[0].clientX - touchStartX > 100) {
           setMobileView("list");
         }
       }}
@@ -628,7 +632,7 @@ export default function Messages() {
             <div className="flex-shrink-0 flex items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow-sm relative">
               <div className="flex items-center space-x-2 min-w-0">
                 {/* Back button: show only on small screens (<=766px width) and only if in chat view */}
-                {isSmallScreen && mobileView === "chat" && (
+                {isMobileUI && mobileView === "chat" && (
                   <button
                     onClick={() => setMobileView("list")}
                     className="p-2 focus:outline-none text-lg"
@@ -992,7 +996,7 @@ export default function Messages() {
   return (
     <>
       <div className="flex w-full h-full overflow-hidden m-0 p-0 pb-12 sm:pb-0">
-        {isSmallScreen ? (
+        {isMobileUI ? (
           <div className="w-full">
             {mobileView === "list" && chatListPane}
             {mobileView === "chat" && chatConversationPane}
