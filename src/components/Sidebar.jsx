@@ -21,7 +21,27 @@ import {
 
 
 export default function Sidebar({ role }) {
-  const currentLang = lang[language] || lang.en;
+  const currentLang = {
+    languageToggle: lang("languageToggle"),
+    lightMode: lang("lightMode"),
+    darkMode: lang("darkMode"),
+    logout: lang("logout"),
+    confirmLogout: lang("confirmLogout"),
+    cancel: lang("cancel"),
+    confirm: lang("confirm"),
+    adminDashboard: lang("adminDashboard"),
+    manageTenants: lang("manageTenants"),
+    managePages: lang("managePages"),
+    dashboard: lang("dashboard"),
+    messages: lang("messages"),
+    customers: lang("customers"),
+    profile: lang("profile"),
+    bookings: lang("bookings"),
+    topup: lang("topup"),
+    analytics: lang("analytics"),
+    notifications: lang("notifications"),
+    team: lang("team"),
+  };
   const [theme, setTheme] = useState("light");
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
@@ -197,6 +217,8 @@ export default function Sidebar({ role }) {
   const toggleLang = () => {
     const newLang = language === "en" ? "ar" : "en";
     setLanguage(newLang);
+    // Store current route before reload
+    localStorage.setItem("last_route", window.location.pathname + window.location.search);
     window.location.reload();
   };
 
@@ -248,18 +270,20 @@ export default function Sidebar({ role }) {
         </button>
       </nav>
       {showSettings && (
-        <div className="fixed bottom-20 right-4 flex flex-col items-center space-y-4 z-50">
+        <div className="fixed bottom-20 right-4 flex flex-col items-center z-50">
           <button
             onClick={toggleLang}
             aria-label="Toggle Language"
-            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+            title={currentLang.languageToggle}
+            className="rounded-full w-14 h-14 flex items-center justify-center bg-white dark:bg-gray-800 shadow-lg hover:scale-105 transition-transform mb-3"
           >
             <GlobeAltIcon className="w-8 h-8 text-gray-600 dark:text-gray-300" />
           </button>
           <button
             onClick={toggleDarkMode}
             aria-label="Toggle Theme"
-            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+            title={theme === "dark" ? currentLang.lightMode : currentLang.darkMode}
+            className="rounded-full w-14 h-14 flex items-center justify-center bg-white dark:bg-gray-800 shadow-lg hover:scale-105 transition-transform mb-3"
           >
             {theme === "dark" ? (
               <SunIcon className="w-8 h-8 text-yellow-400" />
@@ -270,7 +294,8 @@ export default function Sidebar({ role }) {
           <button
             onClick={() => setShowLogoutModal(true)}
             aria-label="Logout"
-            className="w-16 h-16 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center"
+            title={currentLang.logout}
+            className="rounded-full w-14 h-14 flex items-center justify-center bg-white dark:bg-gray-800 shadow-lg hover:scale-105 transition-transform"
           >
             <ArrowRightOnRectangleIcon className="w-8 h-8 text-red-600" />
           </button>
@@ -288,7 +313,8 @@ export default function Sidebar({ role }) {
   }
 
   return (
-    <aside className={`min-h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700 px-3 py-6 flex flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <div className={language === "ar" ? "flex flex-row-reverse" : "flex flex-row"}>
+    <aside className={`min-h-screen bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 px-3 py-6 flex flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'} ${language === "ar" ? 'border-l border-l-gray-200 dark:border-l-gray-700 border-r-0' : 'border-r border-r-gray-200 dark:border-r-gray-700'}`}>
       <div>
         <div className="flex justify-center mb-4">
           <button
@@ -348,62 +374,100 @@ export default function Sidebar({ role }) {
         </nav>
       </div>
 
-      <div className="space-y-3 text-sm flex flex-col items-center mt-6 relative">
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-2 focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-            aria-label="Open settings"
-          >
-            <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-          </button>
-        </div>
-        {showSettings && (
-          <div className="mt-2 space-y-2">
+      <div className="space-y-3 text-sm flex flex-col items-center mt-6 relative w-full">
+        {/* Desktop/expanded: show settings as full-width buttons */}
+        {(!isCollapsed && window.innerWidth >= 1024) ? (
+          <div className="w-full flex flex-col space-y-3 pb-4 mt-8 mb-4">
             <button
               onClick={toggleLang}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+              className="flex items-center justify-center w-full min-w-0 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm font-semibold gap-2"
             >
-              🌐 {currentLang.languageToggle}
+              <GlobeAltIcon className="w-6 h-6 text-blue-500" />
+              <span className="text-gray-800 dark:text-gray-100 truncate">{currentLang.languageToggle}</span>
             </button>
             <button
               onClick={toggleDarkMode}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+              className="flex items-center justify-center w-full min-w-0 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm font-semibold gap-2"
             >
-              {theme === "dark" ? "☀️ " + currentLang.lightMode : "🌙 " + currentLang.darkMode}
+              {theme === "dark" ? (
+                <SunIcon className="w-6 h-6 text-yellow-400" />
+              ) : (
+                <MoonIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+              )}
+              <span className="text-gray-800 dark:text-gray-100 truncate">
+                {theme === "dark" ? currentLang.lightMode : currentLang.darkMode}
+              </span>
             </button>
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+              className="flex items-center justify-center w-full min-w-0 px-4 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900 transition-colors text-sm font-semibold gap-2"
             >
-              🚪 {currentLang.logout}
+              <ArrowRightOnRectangleIcon className="w-6 h-6 text-red-500" />
+              <span className="text-gray-800 dark:text-gray-100 truncate">{currentLang.logout}</span>
             </button>
+          </div>
+        ) : (
+          // Show hamburger (settings) button only if collapsed or narrow
+          <div className="flex justify-end w-full">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+              aria-label="Open settings"
+            >
+              <Bars3Icon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+            </button>
+            {/* The settings menu (popover) */}
+            {showSettings && (
+              <div className="absolute left-0 bottom-12 mb-2 w-56 space-y-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 z-50">
+                <button
+                  onClick={toggleLang}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+                >
+                  🌐 {currentLang.languageToggle}
+                </button>
+                <button
+                  onClick={toggleDarkMode}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+                >
+                  {theme === "dark" ? "☀️ " + currentLang.lightMode : "🌙 " + currentLang.darkMode}
+                </button>
+                <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+                >
+                  🚪 {currentLang.logout}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {showLogoutModal && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 shadow-lg z-50">
-            <p className="text-sm text-gray-800 dark:text-gray-100 mb-4">{currentLang.confirmLogout || "Are you sure you want to logout?"}</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowLogoutModal(false)}
-                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                {currentLang.cancel || "Cancel"}
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = "/";
-                }}
-                className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
-              >
-                {currentLang.confirm || "Logout"}
-              </button>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl w-full max-w-xs text-center">
+              <p className="text-base text-gray-800 dark:text-gray-100 mb-6">{currentLang.confirmLogout || "Are you sure you want to logout?"}</p>
+              <div className="flex flex-row gap-4">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+                >
+                  {currentLang.cancel || "Cancel"}
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.clear();
+                    window.location.href = "/";
+                  }}
+                  className="flex-1 px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 font-semibold"
+                >
+                  {currentLang.confirm || "Logout"}
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
     </aside>
+    </div>
   );
 }

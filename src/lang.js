@@ -4,8 +4,7 @@ export const setLanguage = (lang) => {
   localStorage.setItem("lang", lang);
 };
 
-// 🌍 Language dictionary
-export const lang = {
+export const translations = {
   en: {
     // Generic
     sidebar: "Sidebar",
@@ -67,7 +66,63 @@ export const lang = {
     invite: "Invite",
     owner: "Owner",
     manager: "Manager",
-    staff: "Staff"
+    staff: "Staff",
+
+    // Customer Table Headers & Filters
+    nameHeader: "Name",
+    phoneHeader: "Phone",
+    tagsHeader: "Tags",
+    notesHeader: "Notes",
+    customerAgeHeader: "Customer Age (days)",
+    daysSinceContactHeader: "Days Since Contact",
+    actionsHeader: "Actions",
+    avatarHeader: "Avatar",
+    nameFilter: "Filter name",
+    phoneFilter: "Filter phone",
+    tagsFilter: "Filter tags",
+    notesFilter: "Filter notes",
+    first_seenFilter: "Filter first seen",
+    last_seenFilter: "Filter last seen",
+    dash: "-",
+    avatarAlt: "avatar",
+
+    // Customers Page Specific
+    customerNotesTags: "Customer Notes & Tags",
+    searchCustomers: "Search customers...",
+    sortOptions: "Sort Options",
+    tagsCommaSeparated: "Tags (comma separated)",
+    tagsPlaceholder: "Add tags here...",
+    notesLabel: "Notes",
+    notesPlaceholder: "Write notes here...",
+    filter: "Filter",
+    backToDashboard: "Back to Dashboard",
+    firstSeenLabel: "First Seen",
+    lastSeenLabel: "Last Seen",
+    prev: "Prev",
+    next: "Next",
+    agoSuffix: " ago",
+    today: "Today",
+    daysAgo: (n) => `${n} day${n === 1 ? "" : "s"} ago`,
+    weeksAgo: (n) => `${n} week${n === 1 ? "" : "s"} ago`,
+    monthsAgo: (n) => `${n} month${n === 1 ? "" : "s"} ago`,
+    yearsAgo: (n) => `${n} year${n === 1 ? "" : "s"} ago`,
+    decadesAgo: (n) => `${n} decade${n === 1 ? "" : "s"} ago`,
+    showingCustomers: (from, to, total) =>
+      `Showing ${from}-${to} of ${total} customers`,
+    perPage: (n) => `Per page: ${n}`,
+
+    // Messages Page Specific
+    recentChats: "Recent Chats",
+    showingLast24Hours: "Showing only messages from the last 24 hours",
+    searchPlaceholder: "Search number or preview…",
+    typeMessagePlaceholder: "Type a message...",
+    customerDetails: "Customer Details",
+    selectCustomer: "Select a customer to view conversation",
+    noMessages: "No messages yet",
+    close: "Close",
+    copy: "Copy",
+    copied: "Copied!",
+    returnToTop: "Return to Top",
   },
 
   ar: {
@@ -131,6 +186,72 @@ export const lang = {
     invite: "دعوة",
     owner: "المالك",
     manager: "المدير",
-    staff: "الموظف"
+    staff: "الموظف",
+
+    // Customer Table Headers & Filters
+    nameHeader: "الاسم",
+    phoneHeader: "رقم الجوال",
+    tagsHeader: "الوسوم",
+    notesHeader: "ملاحظات",
+    customerAgeHeader: "عمر العميل (بالأيام)",
+    daysSinceContactHeader: "أيام منذ آخر تواصل",
+    actionsHeader: "الإجراءات",
+    avatarHeader: "الصورة",
+    nameFilter: "فلتر الاسم",
+    phoneFilter: "فلتر الجوال",
+    tagsFilter: "فلتر الوسوم",
+    notesFilter: "فلتر الملاحظات",
+    first_seenFilter: "فلتر أول تواجد",
+    last_seenFilter: "فلتر آخر تواجد",
+    dash: "-",
+    avatarAlt: "الصورة",
+
+    // Customers Page Specific
+    customerNotesTags: "ملاحظات العملاء والوسوم",
+    searchCustomers: "ابحث عن العملاء...",
+    sortOptions: "خيارات الفرز",
+    tagsCommaSeparated: "الوسوم (مفصولة بفاصلة)",
+    tagsPlaceholder: "أضف الوسوم هنا...",
+    notesLabel: "ملاحظات",
+    notesPlaceholder: "أضف ملاحظات هنا...",
+    filter: "تصفية",
+    backToDashboard: "العودة للوحة التحكم",
+    firstSeenLabel: "أول ظهور",
+    lastSeenLabel: "آخر ظهور",
+    prev: "السابق",
+    next: "التالي",
+    agoSuffix: " مضت",
+    today: "اليوم",
+    daysAgo: (n) => `قبل ${n} يوم`,
+    weeksAgo: (n) => `قبل ${n} أسبوع`,
+    monthsAgo: (n) => `قبل ${n} شهر`,
+    yearsAgo: (n) => `قبل ${n} سنة`,
+    decadesAgo: (n) => `قبل ${n} عقد`,
+    showingCustomers: (from, to, total) =>
+      `عرض ${from} إلى ${to} من أصل ${total} عميل`,
+    perPage: (n) => `لكل صفحة: ${n}`,
+
+    // Messages Page Specific
+    recentChats: "الدردشات الأخيرة",
+    showingLast24Hours: "عرض الرسائل من آخر 24 ساعة فقط",
+    searchPlaceholder: "ابحث برقم العميل أو معاينة...",
+    typeMessagePlaceholder: "اكتب رسالة...",
+    customerDetails: "تفاصيل العميل",
+    selectCustomer: "اختر عميلًا لعرض المحادثة",
+    noMessages: "لا توجد رسائل بعد",
+    close: "إغلاق",
+    copy: "نسخ",
+    copied: "تم النسخ!",
+    returnToTop: "العودة للأعلى",
   },
 };
+
+export function lang(key, ...params) {
+  const selected = language || "en";
+  const dict = translations[selected] || translations["en"];
+  const value = dict[key];
+  if (typeof value === "function") {
+    return value(...params);
+  }
+  return value || key;
+}

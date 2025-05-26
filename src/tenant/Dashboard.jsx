@@ -5,9 +5,6 @@ import { lang, language } from "../lang";
 export default function Dashboard() {
   const [stats, setStats] = useState({ totalMessages: 0, sentToday: 0 });
 
-  // Fallback to English if lang key is missing
-  const currentLang = lang[language] || lang.en;
-
   useEffect(() => {
     const fetchStats = async () => {
       const workflow = localStorage.getItem("workflow");
@@ -38,14 +35,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-        {currentLang.dashboard || "Dashboard"}
+        {lang("dashboard")}
       </h2>
       <div className="bg-white dark:bg-gray-800 shadow rounded p-4">
         <p className="text-gray-800 dark:text-gray-100 font-medium">
-          📦 {currentLang.totalMessages || "Total Messages"}: {stats?.totalMessages || 0}
+          📦 {lang("totalMessages")}: {stats?.totalMessages || 0}
         </p>
         <p className="text-gray-800 dark:text-gray-100 font-medium">
-          📩 {currentLang.sentToday || "Sent Today"}: {stats?.sentToday || 0}
+          📩 {lang("sentToday")}: {stats?.sentToday || 0}
         </p>
       </div>
     </div>

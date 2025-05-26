@@ -6,24 +6,31 @@ import { supabase } from "../components/supabaseClient";
 import defaultAvatar from "../assets/default-avatar.png";
 import { useNavigate } from "react-router-dom";
 
+import { lang } from "../lang";
+
 // helper to format a timestamp as relative time (days/weeks/years/decades ago)
 function formatRelative(dateString) {
   const diffMs = Date.now() - new Date(dateString).getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 1) return "Today";
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffDays < 1) return lang("today");
+  if (diffDays < 7) return lang("daysAgo", diffDays);
   const diffWeeks = Math.floor(diffDays / 7);
-  if (diffWeeks < 52) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+  if (diffWeeks < 52) return lang("weeksAgo", diffWeeks);
   const diffYears = Math.floor(diffDays / 365);
-  if (diffYears < 10) return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+  if (diffYears < 10) return lang("yearsAgo", diffYears);
   const diffDecades = Math.floor(diffYears / 10);
-  return `${diffDecades} decade${diffDecades > 1 ? "s" : ""} ago`;
+  return lang("decadesAgo", diffDecades);
 }
 
 // helper to format a timestamp as a duration without "ago" suffix
 function formatDuration(dateString) {
+  // Remove trailing " ago" or language equivalent
   const rel = formatRelative(dateString);
-  return rel.endsWith(' ago') ? rel.slice(0, -4) : rel;
+  const agoSuffix = lang("agoSuffix");
+  if (rel.endsWith(agoSuffix)) {
+    return rel.slice(0, -agoSuffix.length);
+  }
+  return rel;
 }
 
 
@@ -32,6 +39,13 @@ export default function Customers() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  // Small screen detection state (<= 767px)
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 767);
+  useEffect(() => {
+    const onResize = () => setIsSmallScreen(window.innerWidth <= 767);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -205,41 +219,41 @@ export default function Customers() {
   };
 
   return (
-    <div className="flex flex-col h-full p-2">
-      <div className={`mb-4 ${isMobile && isPortrait ? 'flex flex-col space-y-2' : 'flex items-center justify-between space-x-4'}`}>
-        <button
-          onClick={() => navigate("/tenant/dashboard")}
-          className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded focus:outline-none"
-          aria-label="Back to dashboard"
-        >
-          ←
-        </button>
+    <div className="flex flex-col h-full p-2" dir={localStorage.getItem("lang") === "ar" ? "rtl" : "ltr"}>
+      <div className="mb-4 flex flex-wrap items-center gap-2 w-full">
+        {isSmallScreen && (
+          <button
+            onClick={() => navigate("/tenant/dashboard")}
+            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded focus:outline-none"
+            aria-label={lang("backToDashboard")}
+          >
+            ←
+          </button>
+        )}
         <h2
-          className={`${isMobile ? 'text-sm sm:text-base' : 'text-base sm:text-lg'} font-bold text-gray-900 dark:text-white flex-shrink-0`}
+          className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex-shrink-0 mr-auto"
+          style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
-          📁 Customer Notes & Tags
+          📁 {lang("customerNotesTags")}
         </h2>
-        <div
-          ref={sortContainerRef}
-          className={`relative flex items-center w-full ${isMobile && isPortrait ? '' : 'max-w-sm'}`}
-        >
+        <div className="flex items-center flex-1 min-w-[120px] max-w-xs">
           <input
             type="text"
             value={globalFilter}
             onChange={e => setGlobalFilter(e.target.value)}
-            placeholder="Search customers…"
+            placeholder={lang("searchCustomers")}
             className="flex-1 pl-3 pr-2 py-1 border rounded shadow-sm focus:outline-none focus:ring text-xs sm:text-sm"
           />
           <button
             onClick={() => setShowSortMenu(!showSortMenu)}
             className="ml-2 p-2 bg-white dark:bg-gray-800 rounded focus:outline-none"
-            aria-label="Sort options"
+            aria-label={lang("sortOptions")}
           >
             <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
           {showSortMenu && (
             <div className="absolute mt-2 right-0 bg-white dark:bg-gray-900 border rounded shadow p-2 z-50 w-40">
-              {['name','phone','tags','notes','first_seen','last_seen'].map(key => (
+              {['name', 'phone', 'tags', 'notes', 'first_seen', 'last_seen'].map(key => (
                 <button
                   key={key}
                   onClick={() => {
@@ -249,7 +263,9 @@ export default function Customers() {
                   }}
                   className="flex items-center justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
                 >
-                  <span>{key.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                  <span>
+                    {lang(key + "Header")}
+                  </span>
                   {sortConfig.key === key && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                 </button>
               ))}
@@ -265,7 +281,7 @@ export default function Customers() {
           <thead className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white">
             <tr>
               <th className="text-center p-2 sm:p-3 text-sm sm:text-base">#</th>
-              <th className="text-center p-2 sm:p-3 text-sm sm:text-base">Avatar</th>
+              <th className="text-center p-2 sm:p-3 text-sm sm:text-base">{lang("avatarHeader")}</th>
               <th className="text-center p-2 sm:p-3 text-sm sm:text-base">
                 <button onClick={() => {
                   const key = "name";
@@ -273,7 +289,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Name</span>
+                  <span>{lang("nameHeader")}</span>
                   {sortConfig.key === "name" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -286,7 +302,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Phone</span>
+                  <span>{lang("phoneHeader")}</span>
                   {sortConfig.key === "phone" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -299,7 +315,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Tags</span>
+                  <span>{lang("tagsHeader")}</span>
                   {sortConfig.key === "tags" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -312,7 +328,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Notes</span>
+                  <span>{lang("notesHeader")}</span>
                   {sortConfig.key === "notes" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -325,7 +341,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Customer Age (days)</span>
+                  <span>{lang("customerAgeHeader")}</span>
                   {sortConfig.key === "first_seen" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -338,13 +354,13 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>Days Since Contact</span>
+                  <span>{lang("daysSinceContactHeader")}</span>
                   {sortConfig.key === "last_seen" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
                 </button>
               </th>
-              <th className="text-center p-3">Actions</th>
+              <th className="text-center p-3">{lang("actionsHeader")}</th>
             </tr>
             <tr className="bg-gray-100 dark:bg-gray-700">
               <th></th>
@@ -355,7 +371,7 @@ export default function Customers() {
                     type="text"
                     value={columnFilters[col]}
                     onChange={e => setColumnFilters(prev => ({...prev, [col]: e.target.value}))}
-                    placeholder={`Filter ${col.replace("_"," ")}`}
+                    placeholder={lang(col + "Filter") || `${lang("filter")} ${lang(col + "Header")}`}
                     className="w-full p-1 border rounded text-sm bg-white dark:bg-gray-800"
                   />
                 </th>
@@ -370,7 +386,7 @@ export default function Customers() {
                 <tr key={cust.id} className="border-t hover:bg-gray-100 dark:hover:bg-gray-800">
                   <td className="p-3 text-center font-medium text-gray-900 dark:text-white">{pageIndex * pageSize + index + 1}</td>
                   <td className="p-3 text-center">
-                    <img src={defaultAvatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                    <img src={defaultAvatar} alt={lang("avatarAlt")} className="w-8 h-8 rounded-full" />
                   </td>
                   <td className="p-3 text-left font-medium text-gray-900 dark:text-white">{cust.name}</td>
                   <td className="p-3 text-center text-gray-900 dark:text-white">{cust.phone}</td>
@@ -392,7 +408,7 @@ export default function Customers() {
                       }}
                       className="text-blue-600 hover:underline text-sm"
                     >
-                      Edit
+                      {lang("edit")}
                     </button>
                   </td>
                 </tr>
@@ -415,12 +431,12 @@ export default function Customers() {
                     setTags(noteEntry.tags || "");
                   }}
                   className="absolute top-2 right-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-full focus:outline-none text-xs"
-                  aria-label="Edit"
+                  aria-label={lang("edit")}
                 >
                   ✏️
                 </button>
                 <div className="flex items-center space-x-2 mb-1">
-                  <img src={defaultAvatar} alt="avatar" className="w-10 h-10 rounded-full" />
+                  <img src={defaultAvatar} alt={lang("avatarAlt")} className="w-10 h-10 rounded-full" />
                   <div className="flex items-center space-x-1">
                     {cust.name ? (
                       <>
@@ -440,12 +456,12 @@ export default function Customers() {
                 </div>
                 <div className="grid grid-cols-2 gap-1">
                   <div className="space-y-1">
-                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">Tags:</span> {noteEntry.tags || "-"}</div>
-                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">Notes:</span> {noteEntry.notes || "-"}</div>
+                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("tagsLabel")}:</span> {noteEntry.tags || lang("dash")}</div>
+                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("notesLabel")}:</span> {noteEntry.notes || lang("dash")}</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xs"><span className="font-medium">First Seen:</span> {cust.first_seen ? formatDuration(cust.first_seen) : "-"}</div>
-                    <div className="text-xs"><span className="font-medium">Last Seen:</span> {cust.last_seen ? formatRelative(cust.last_seen) : "-"}</div>
+                    <div className="text-xs"><span className="font-medium">{lang("firstSeenLabel")}:</span> {cust.first_seen ? formatDuration(cust.first_seen) : lang("dash")}</div>
+                    <div className="text-xs"><span className="font-medium">{lang("lastSeenLabel")}:</span> {cust.last_seen ? formatRelative(cust.last_seen) : lang("dash")}</div>
                   </div>
                 </div>
               </div>
@@ -465,7 +481,11 @@ export default function Customers() {
         }`}
       >
         <div className="text-center text-gray-700 dark:text-gray-300">
-          Showing {(pageIndex * pageSize) + 1}–{Math.min((pageIndex + 1) * pageSize, sortedCustomers.length)} of {sortedCustomers.length} customers
+          {lang("showingCustomers",
+            (pageIndex * pageSize) + 1,
+            Math.min((pageIndex + 1) * pageSize, sortedCustomers.length),
+            sortedCustomers.length
+          )}
         </div>
         {isMobile && isPortrait ? (
           <div className="flex items-center space-x-2">
@@ -475,7 +495,7 @@ export default function Customers() {
               className="p-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs"
             >
               {[10,20,50,100].map(size => (
-                <option key={size} value={size}>{size} / page</option>
+                <option key={size} value={size}>{lang("perPage", size)}</option>
               ))}
             </select>
             <button
@@ -483,7 +503,7 @@ export default function Customers() {
               disabled={pageIndex === 0}
               className="px-2 py-1 border rounded text-xs"
             >
-              Prev
+              {lang("prev")}
             </button>
             <span className="text-xs">{pageIndex + 1} / {pageCount || 1}</span>
             <button
@@ -491,7 +511,7 @@ export default function Customers() {
               disabled={pageIndex >= pageCount - 1}
               className="px-2 py-1 border rounded text-xs"
             >
-              Next
+              {lang("next")}
             </button>
           </div>
         ) : (
@@ -502,7 +522,7 @@ export default function Customers() {
               className="p-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs sm:text-sm"
             >
               {[10,20,50,100].map(size => (
-                <option key={size} value={size}>{size} / page</option>
+                <option key={size} value={size}>{lang("perPage", size)}</option>
               ))}
             </select>
             <button
@@ -510,7 +530,7 @@ export default function Customers() {
               disabled={pageIndex === 0}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              Prev
+              {lang("prev")}
             </button>
             <span>{pageIndex + 1} / {pageCount || 1}</span>
             <button
@@ -518,7 +538,7 @@ export default function Customers() {
               disabled={pageIndex >= pageCount - 1}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              Next
+              {lang("next")}
             </button>
           </div>
         )}
@@ -531,24 +551,24 @@ export default function Customers() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              ✏️ Edit {editingCustomer}
+              ✏️ {lang("edit")} {editingCustomer}
             </h3>
 
-            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">Tags (comma separated)</label>
+            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("tagsCommaSeparated")}</label>
             <input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               className="w-full p-2 border rounded mb-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              placeholder="e.g. VIP, Walk-in"
+              placeholder={lang("tagsPlaceholder")}
             />
 
-            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">Notes</label>
+            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("notesLabel")}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full p-2 border rounded mb-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              placeholder="Write any notes about this customer"
+              placeholder={lang("notesPlaceholder")}
               rows={4}
             />
 
@@ -562,13 +582,13 @@ export default function Customers() {
                 }}
                 className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-gray-900 dark:text-gray-100"
               >
-                Cancel
+                {lang("cancel")}
               </button>
               <button
                 onClick={handleSave}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
-                Save
+                {lang("save")}
               </button>
             </div>
           </div>

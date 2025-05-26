@@ -10,7 +10,6 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     // clear any stale auth info
-    localStorage.removeItem('role');
     localStorage.removeItem('workflow_name');
     localStorage.removeItem('email');
     e.preventDefault();

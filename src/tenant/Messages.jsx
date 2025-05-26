@@ -9,6 +9,7 @@ import defaultAvatar from "../assets/default-avatar.png";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { lang } from "../lang";
 
 export default function Messages() {
   const [workflow, setWorkflow] = useState("");
@@ -21,6 +22,8 @@ export default function Messages() {
   const [dateOpen, setDateOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
+  // Mobile view state: "list" or "chat"
+  const [mobileView, setMobileView] = useState("list");
 
   // left pane sort state and ref
   const [leftShowSortMenu, setLeftShowSortMenu] = useState(false);
@@ -52,13 +55,22 @@ export default function Messages() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSortMenu]);
 
-  // mobile view state: "list" shows chat list, "chat" shows conversation on phones
-  const [mobileView, setMobileView] = useState("list");
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  // Treat screens <= 766px as mobile for both portrait and landscape modes
+  const MOBILE_MAX_WIDTH = 766;
+  // mobile view: for <= 766px, always show only chat list (single pane)
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= MOBILE_MAX_WIDTH);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= MOBILE_MAX_WIDTH;
+      setIsSmallScreen(isMobile);
+      // When resizing to mobile, default to list view
+      if (isMobile) setMobileView("list");
+      // When resizing to desktop, show both panes
+      else setMobileView("list");
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line
   }, []);
   const navigate = useNavigate();
   // for swipe gesture on mobile
@@ -374,21 +386,56 @@ export default function Messages() {
       .then(({ data }) => setChatHistory(data));
   }, [workflow, selectedNumber]);
 
-  // subscribe to new messages in real-time (Supabase v2)
+  // subscribe to new messages for this workflow and update customer list and chat history in real time
   useEffect(() => {
-    if (!workflow || !selectedNumber) return;
+    if (!workflow) return;
+    // Subscribe to all new messages for this workflow
     const channel = supabase
-      .channel(`messages_${workflow}_${selectedNumber}`)
+      .channel(`messages_${workflow}_all`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `workflow_name=eq.${workflow},number=eq.${selectedNumber}`,
+          filter: `workflow_name=eq.${workflow}`,
         },
         (payload) => {
-          setChatHistory((prev) => [...prev, payload.new]);
+          const m = payload.new;
+          // Update chat history if selected
+          if (m.number === selectedNumber) {
+            setChatHistory((prev) => [...prev, m]);
+          }
+          // Always update customers list (recent chats)
+          setCustomers((prev) => {
+            // Only update if within last 24h
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            if (new Date(m.timestamp) < twentyFourHoursAgo) return prev;
+            let updated = prev.slice();
+            const idx = updated.findIndex(c => c.number === m.number);
+            if (idx > -1) {
+              // update preview/timestamp/contact_name
+              updated[idx] = {
+                ...updated[idx],
+                preview: m.content,
+                timestamp: m.timestamp,
+                contact_name: m.contact_name,
+              };
+            } else {
+              // add new customer
+              updated.push({
+                number: m.number,
+                contact_name: m.contact_name,
+                preview: m.content,
+                timestamp: m.timestamp,
+              });
+            }
+            // Remove any chats older than 24h
+            return updated.filter(
+              c => new Date(c.timestamp) > twentyFourHoursAgo
+            );
+          });
         }
       )
       .subscribe();
@@ -396,43 +443,6 @@ export default function Messages() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [workflow, selectedNumber]);
-
-  // Refetch chat history when window/tab regains focus
-  useEffect(() => {
-    const handleFocus = () => {
-      if (!workflow || !selectedNumber) return;
-      supabase
-        .from("messages")
-        .select("*")
-        .eq("workflow_name", workflow)
-        .eq("number", selectedNumber)
-        .order("timestamp", { ascending: true })
-        .then(({ data }) => {
-          if (data) setChatHistory(data);
-        })
-        .catch((err) => console.error("Refetch on focus error:", err));
-    };
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [workflow, selectedNumber]);
-
-  // Poll for new messages every 5 seconds
-  useEffect(() => {
-    if (!workflow || !selectedNumber) return;
-    const intervalId = setInterval(() => {
-      supabase
-        .from("messages")
-        .select("*")
-        .eq("workflow_name", workflow)
-        .eq("number", selectedNumber)
-        .order("timestamp", { ascending: true })
-        .then(({ data }) => {
-          if (data) setChatHistory(data);
-        })
-        .catch((err) => console.error("Polling error:", err));
-    }, 5000);
-    return () => clearInterval(intervalId);
   }, [workflow, selectedNumber]);
 
   // apply left-pane search filter and sort
@@ -460,138 +470,160 @@ export default function Messages() {
       return 0;
     });
 
-  return (
-    <>
-    <div className="flex w-full h-full overflow-hidden m-0 p-0 pb-12 sm:pb-0">
-      {/* chat list pane */}
-      {(!isMobile || mobileView === "list") && (
-        <div
-          ref={leftPaneRef}
-          className="absolute inset-0 z-20 bg-gray-50 dark:bg-gray-800 overflow-y-auto overflow-x-hidden p-1 box-border sm:relative sm:inset-auto sm:z-auto sm:block sm:w-80"
-        >
-          <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 pt-2 pb-1 px-1 shadow-sm">
-            <div className="flex items-start space-x-2 px-2 mb-1">
-              {/* Back button moved here */}
-              {isMobile && (
-                <button
-                  onClick={() => navigate('/tenant/dashboard')}
-                  className="sm:hidden p-2 focus:outline-none"
-                  aria-label="Back"
-                >
-                  ←
-                </button>
-              )}
-              <div className="flex-1">
-                <span className="block text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">Recent Chats</span>
-                <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Showing only messages from the last 24 hours</p>
-              </div>
-            </div>
-            <div ref={leftSortRef} className="flex items-center space-x-2 px-2 relative">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Search number or preview…"
-                  value={leftSearchTerm}
-                  onChange={e => setLeftSearchTerm(e.target.value)}
-                  className="w-full pr-8 p-2 border rounded shadow-sm focus:ring-2 focus:ring-blue-400 text-xs sm:text-sm"
-                />
-                {leftSearchTerm && (
-                  <button
-                    onClick={() => setLeftSearchTerm("")}
-                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-600 font-bold"
-                    aria-label="Clear search"
-                    type="button"
-                  >×</button>
-                )}
-              </div>
-              <button
-                onClick={() => setLeftShowSortMenu(!leftShowSortMenu)}
-                className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none"
-                aria-label="Sort chats"
-              >
-                <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </button>
-              {leftShowSortMenu && (
-                <div className="absolute mt-10 right-2 bg-white dark:bg-gray-900 border rounded shadow p-2 z-40 w-40">
-                  {['contact_name','preview','timestamp'].map(key => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        const newDirection = leftSortConfig.key === key && leftSortConfig.direction === 'asc' ? 'desc' : 'asc';
-                        setLeftSortConfig({ key, direction: newDirection });
-                        setLeftShowSortMenu(false);
-                      }}
-                      className="flex justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-                    >
-                      <span>{key === 'contact_name' ? 'Name' : key === 'preview' ? 'Preview' : 'Time'}</span>
-                      {leftSortConfig.key === key && (
-                        <span className="ml-1">{leftSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          {filteredCustomers.map((c) => (
-            <div
-              key={c.number}
-              onClick={() => { setSelectedNumber(c.number); if (isMobile) setMobileView("chat"); }}
-              className={`${c.number === selectedNumber
-                ? 'bg-white dark:bg-gray-600 shadow-md border border-transparent'
-                : 'bg-white dark:bg-gray-700 shadow-inner border border-transparent'
-              } flex justify-between items-center p-3 m-2 rounded-xl cursor-pointer transition duration-150 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200`}
+  // Chat list pane JSX (responsive version)
+  const chatListPane = (
+    <div
+      ref={leftPaneRef}
+      className={`
+        absolute inset-0 z-20 bg-gray-50 dark:bg-gray-800 overflow-y-auto overflow-x-hidden p-1 box-border
+        ${isSmallScreen ? 'w-full max-w-full min-h-screen flex flex-col' : 'sm:relative sm:inset-auto sm:z-auto sm:block sm:w-80'}
+      `}
+      style={isSmallScreen ? { minHeight: "100vh" } : {}}
+    >
+      <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 pt-2 pb-1 px-1 shadow-sm">
+        <div className="flex items-start space-x-2 px-2 mb-1">
+          {/* Back button: show only on small screens (<=767px width) and only if in chat view */}
+          {isSmallScreen && mobileView === "chat" && (
+            <button
+              onClick={() => setMobileView("list")}
+              className="p-2 focus:outline-none"
+              aria-label="Back"
             >
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                {/* avatar */}
-                <img
-                  src={defaultAvatar}
-                  alt="avatar"
-                  className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-blue-300 dark:ring-blue-500"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{c.contact_name || c.number}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-300 truncate">{c.preview}</div>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-                {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </div>
-          ))}
-          {filteredCustomers.length === 0 && (
-            <div className="p-6 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
-              <svg className="w-12 h-12 mb-2 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2 2h20v18H6l-4 4V2z" />
-              </svg>
-              <span className="text-lg">No messages found</span>
+              ←
+            </button>
+          )}
+          {/* On mobile, in list view, show back to dashboard button */}
+          {isSmallScreen && mobileView === "list" && (
+            <button
+              onClick={() => navigate('/tenant/dashboard')}
+              className="p-2 focus:outline-none"
+              aria-label="Back"
+            >
+              ←
+            </button>
+          )}
+          <div className="flex-1">
+            <span className="block text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">{lang("recentChats")}</span>
+            <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">{lang("showingLast24Hours")}</p>
+          </div>
+        </div>
+        <div ref={leftSortRef} className="flex items-center space-x-2 px-2 relative">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={lang("searchPlaceholder")}
+              value={leftSearchTerm}
+              onChange={e => setLeftSearchTerm(e.target.value)}
+              className="w-full pr-8 p-2 border rounded shadow-sm focus:ring-2 focus:ring-blue-400 text-xs sm:text-sm"
+            />
+            {leftSearchTerm && (
+              <button
+                onClick={() => setLeftSearchTerm("")}
+                className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-600 font-bold"
+                aria-label="Clear search"
+                type="button"
+              >×</button>
+            )}
+          </div>
+          <button
+            onClick={() => setLeftShowSortMenu(!leftShowSortMenu)}
+            className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none"
+            aria-label="Sort chats"
+          >
+            <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          </button>
+          {leftShowSortMenu && (
+            <div className="absolute mt-10 right-2 bg-white dark:bg-gray-900 border rounded shadow p-2 z-40 w-40">
+              {['contact_name','preview','timestamp'].map(key => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    const newDirection = leftSortConfig.key === key && leftSortConfig.direction === 'asc' ? 'desc' : 'asc';
+                    setLeftSortConfig({ key, direction: newDirection });
+                    setLeftShowSortMenu(false);
+                  }}
+                  className="flex justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                >
+                  <span>
+                    {key === 'contact_name'
+                      ? lang("customerDetails")
+                      : key === 'preview'
+                        ? lang("searchPlaceholder")
+                        : lang("showingLast24Hours")}
+                  </span>
+                  {leftSortConfig.key === key && (
+                    <span className="ml-1">{leftSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>
-      )}
-
-      {/* chat conversation pane */}
-      {(!isMobile || mobileView === "chat") && (
+      </div>
+      {filteredCustomers.map((c) => (
         <div
-          ref={rightPaneRef}
-          onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
-          onTouchEnd={e => {
-            setTouchEndX(e.changedTouches[0].clientX);
-            if (e.changedTouches[0].clientX - touchStartX > 100) {
-              setMobileView("list");
-            }
+          key={c.number}
+          onClick={() => {
+            setSelectedNumber(c.number);
+            if (isSmallScreen) setMobileView("chat");
           }}
-          className="absolute inset-0 z-10 bg-white dark:bg-gray-800 flex flex-col h-full overflow-hidden p-0 box-border sm:relative sm:inset-auto sm:z-auto sm:flex-1"
+          className={`${c.number === selectedNumber
+            ? 'bg-white dark:bg-gray-600 shadow-md border border-transparent'
+            : 'bg-white dark:bg-gray-700 shadow-inner border border-transparent'
+          } flex justify-between items-center p-3 m-2 rounded-xl cursor-pointer transition duration-150 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200`}
         >
-        {selectedNumber ? (
-          <div className="flex flex-col flex-1 h-full min-h-0">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            {/* avatar */}
+            <img
+              src={defaultAvatar}
+              alt="avatar"
+              className="w-10 h-10 rounded-full flex-shrink-0 object-cover ring-2 ring-blue-300 dark:ring-blue-500"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold truncate text-gray-900 dark:text-gray-100">{c.contact_name || c.number}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-300 truncate">{c.preview}</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+            {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      ))}
+      {filteredCustomers.length === 0 && (
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
+          <svg className="w-12 h-12 mb-2 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2 2h20v18H6l-4 4V2z" />
+          </svg>
+          <span className="text-lg">{lang("noMessages")}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  // Chat conversation pane JSX
+  const chatConversationPane = (
+    <div
+      ref={rightPaneRef}
+      onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+      onTouchEnd={e => {
+        setTouchEndX(e.changedTouches[0].clientX);
+        if (isSmallScreen && e.changedTouches[0].clientX - touchStartX > 100) {
+          setMobileView("list");
+        }
+      }}
+      className="absolute inset-0 z-10 bg-white dark:bg-gray-800 flex flex-col h-full overflow-hidden p-0 box-border sm:relative sm:inset-auto sm:z-auto sm:flex-1"
+    >
+      {selectedNumber ? (
+        <div className="flex flex-col flex-1 h-full min-h-0">
             <div className="flex-shrink-0 flex items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-md shadow-sm relative">
               <div className="flex items-center space-x-2 min-w-0">
-                {isMobile && (
+                {/* Back button: show only on small screens (<=766px width) and only if in chat view */}
+                {isSmallScreen && mobileView === "chat" && (
                   <button
                     onClick={() => setMobileView("list")}
-                    className="sm:hidden p-2 focus:outline-none text-lg"
+                    className="p-2 focus:outline-none text-lg"
                     aria-label="Back to chats"
+                    style={{ marginRight: 8 }}
                   >
                     ←
                   </button>
@@ -621,7 +653,7 @@ export default function Messages() {
                   <div ref={sortContainerRef} className="relative flex items-center space-x-1 transition-all duration-200">
                     <input
                       type="text"
-                      placeholder="Search..."
+                      placeholder={lang("searchPlaceholder")}
                       autoFocus
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
@@ -655,7 +687,11 @@ export default function Messages() {
                             className="flex justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
                           >
                             <span>
-                              {key === 'timestamp' ? 'Time' : key === 'type' ? 'Sender' : 'Content'}
+                              {key === 'timestamp'
+                                ? lang("showingLast24Hours")
+                                : key === 'type'
+                                  ? lang("customerDetails")
+                                  : lang("typeMessagePlaceholder")}
                             </span>
                             {sortConfig.key === key && (
                               <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
@@ -821,7 +857,7 @@ export default function Messages() {
                                 rel="noopener noreferrer"
                                 className="text-blue-600 underline mb-2 block"
                               >
-                                📄 Open PDF
+                                📄 {lang("openPDF")}
                               </a>
                             )}
                           </>
@@ -881,7 +917,7 @@ export default function Messages() {
                   <>
                     <input
                       type="text"
-                      placeholder="Type a message..."
+                      placeholder={lang("typeMessagePlaceholder")}
                       value={newMessage}
                       onChange={e => setNewMessage(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && sendMessage()}
@@ -934,41 +970,30 @@ export default function Messages() {
               </>
             </div>
           </div>
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-            Select a customer to view conversation
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+          {lang("selectCustomer")}
+        </div>
       )}
     </div>
-    {/* mobile bottom nav */}
-    {isMobile && (
-      <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-gray-800 border-t flex">
-        <button
-          onClick={() => navigate('/tenant/dashboard')}
-          className="flex-1 py-2 text-center"
-          aria-label="Home"
-        >
-          🏠
-        </button>
-        <button
-          onClick={() => setMobileView("list")}
-          className={`flex-1 py-2 text-center ${mobileView === "list" ? "bg-gray-100 dark:bg-gray-700" : ""}`}
-          aria-label="Chats"
-        >
-          💬
-        </button>
-        <button
-          onClick={() => setMobileView("chat")}
-          disabled={!selectedNumber}
-          className={`flex-1 py-2 text-center ${mobileView === "chat" ? "bg-gray-100 dark:bg-gray-700" : ""} ${!selectedNumber ? "opacity-50" : ""}`}
-          aria-label="Conversation"
-        >
-          📨
-        </button>
+  );
+
+  // Main return with conditional panes for mobile/desktop
+  return (
+    <>
+      <div className="flex w-full h-full overflow-hidden m-0 p-0 pb-12 sm:pb-0">
+        {isSmallScreen ? (
+          <div className="w-full">
+            {mobileView === "list" && chatListPane}
+            {mobileView === "chat" && chatConversationPane}
+          </div>
+        ) : (
+          <>
+            <div>{chatListPane}</div>
+            <div className="flex-1">{chatConversationPane}</div>
+          </>
+        )}
       </div>
-    )}
     {/* Image Preview Modal */}
     {imagePreviewUrl && (
       <Transition show={!!imagePreviewUrl} as={Fragment}>
@@ -1028,8 +1053,8 @@ export default function Messages() {
               ×
             </button>
             <Dialog.Title className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Customer Details
-            </Dialog.Title>
+  {lang("customerDetails")}
+</Dialog.Title>
             <div className="flex flex-col items-center space-y-2">
               <img
                 src={defaultAvatar}
