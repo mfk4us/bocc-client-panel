@@ -23,6 +23,9 @@ export default function ManagePages() {
     "analytics",
     "notifications",
     "team",
+    "reports",
+    "integration",
+    "sendmessages",
   ];
 
   return (
@@ -44,19 +47,23 @@ export default function ManagePages() {
           <thead>
             <tr>
               <th className="p-2 border">Tenant</th>
-              {pageKeys.map(key => (
-                <th key={key} className="p-2 border capitalize">{key}</th>
+              {pageKeys.map((key) => (
+                <th key={key} className="p-2 border capitalize">
+                  {key}
+                </th>
               ))}
               <th className="p-2 border">Edit Access</th>
             </tr>
           </thead>
           <tbody>
             {pages
-              .filter(p => p.workflow_name.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map(p => (
+              .filter((p) =>
+                p.workflow_name.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((p) => (
                 <tr key={p.id} className="border-t">
                   <td className="p-2 border font-medium">{p.workflow_name}</td>
-                  {pageKeys.map(key => (
+                  {pageKeys.map((key) => (
                     <td key={key} className="p-2 border text-center">
                       {p[key] ? "Yes" : "No"}
                     </td>
@@ -73,16 +80,19 @@ export default function ManagePages() {
               ))}
           </tbody>
         </table>
+
         {editRow && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded p-6 w-[500px]">
-              <h3 className="text-xl font-semibold mb-4">Edit Access for <span className="text-blue-600">{editRow.workflow_name}</span></h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Edit Access for <span className="text-blue-600">{editRow.workflow_name}</span>
+              </h3>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {pageKeys.map((key) => (
                   <label key={key} className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={editRow[key]}
+                      checked={editRow[key] || false}
                       onChange={() =>
                         setEditRow((prev) => ({ ...prev, [key]: !prev[key] }))
                       }
@@ -102,13 +112,15 @@ export default function ManagePages() {
                 <button
                   onClick={async () => {
                     const update = Object.fromEntries(
-                      pageKeys.map(k => [k, editRow[k]])
+                      pageKeys.map((k) => [k, editRow[k] || false])
                     );
                     await supabase
                       .from("tenant_pages")
                       .update(update)
                       .eq("id", editRow.id);
-                    setPages(pages.map(p => p.id === editRow.id ? { ...p, ...update } : p));
+                    setPages(
+                      pages.map((p) => (p.id === editRow.id ? { ...p, ...update } : p))
+                    );
                     setEditRow(null);
                   }}
                   className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
