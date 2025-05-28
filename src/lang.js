@@ -1,11 +1,105 @@
-export const language = localStorage.getItem("lang") || "en";
-
-export const setLanguage = (lang) => {
-  localStorage.setItem("lang", lang);
-};
-
 export const translations = {
   en: {
+    // Integration Page
+    integrations: "Integrations",
+    selectIntegrationType: "Select Integration Type",
+    labelOptional: "Label (optional)",
+    addIntegration: "Add Integration",
+    update: "Update",
+    yourIntegrations: "Your Integrations",
+    type: "Type",
+    label: "Label",
+    active: "Active",
+    config: "Config",
+    noIntegrationsFound: "No integrations found.",
+    documentation: "Documentation",
+    configTextareaPlaceholder: "Config (JSON, e.g. ...)",
+    loading: "Loading...",
+    integrationTypeRequired: "Integration type is required.",
+    configRequired: "Config is required.",
+    configMustBeValidJSON: "Config must be valid JSON.",
+    integrationUpdated: "Integration updated!",
+    integrationAdded: "Integration added!",
+    confirmDeleteIntegration: "Are you sure you want to delete this integration?",
+
+    // Notification Settings
+    notificationSettingsTitle: "Notification Settings",
+    aiSuggestedReplies: "AI Suggested Replies",
+    lowBalanceAlert: "Low Balance Alert",
+    saveSettings: "Save Settings",
+    saving: "Saving...",
+    settingsUpdated: "Settings updated!",
+
+    // Profile Page
+    tenantProfile: "Tenant Profile",
+    numberOfEmployees: "Number of employees",
+    saveProfile: "Save Profile",
+    profileSaved: "Profile saved!",
+
+    // Team Page
+    noTeamMembersFound: "No team members found.",
+
+    // Top-Up Page
+    topUpDashboard: "Top-Up Dashboard",
+    currentBalance: "Current Balance:",
+    topUpComingSoonTitle: "Top-Up Coming Soon",
+    topUpComingSoonDesc: "Online balance top-up and payment will be available soon. Please contact support if you need urgent balance assistance.",
+
+    // Bookings Page
+    switchTo: "Switch to",
+    table: "Table",
+    calendar: "Calendar",
+    view: "View",
+    noBookingsFound: "No bookings found.",
+    date: "Date",
+    customer: "Customer",
+    service: "Service",
+    staff: "Staff",
+
+    // Analytics Page
+    chatAnalytics: "Chat Analytics",
+    showTrends: "Show Trends",
+    hideTrends: "Hide Trends",
+
+    // Manage Pages
+    manageTenantPageAccess: "Manage Tenant Page Access",
+    searchWorkflows: "Search Workflows...",
+    editAccessFor: "Edit access for",
+    saveChanges: "Save Changes",
+    addNewTenant: "Add New Tenant",
+
+    // Manage Tenants
+    addTenant: "Add Tenant",
+    searchTenants: "Search tenants...",
+    filterCustomer: "Filter customer",
+    filterEmail: "Filter email",
+    filterRole: "Filter role",
+    filterWorkflow: "Filter workflow",
+    filterPhone: "Filter phone",
+    filterBusiness: "Filter business",
+    filterStatus: "Filter status",
+    noTenantsMatchFilters: "No tenants match your filters.",
+    editTenant: "Edit Tenant",
+    areYouSureDelete: "Are you sure you want to delete",
+    confirmDelete: "Confirm Delete",
+    businessName: "Business Name",
+    customerName: "Customer Name",
+
+    // Send Messages (bulk & single)
+    fetchingTemplates: "Fetching Templates...",
+    fetchWhatsAppTemplates: "Fetch WhatsApp Templates",
+    selectTemplate: "Select Template",
+    chooseTemplate: "Choose a Template",
+    templatePreview: "Template Preview:",
+    headerImage: "Header (Image):",
+    headerVideo: "Header (Video):",
+    headerText: "Header (Text):",
+    headerType: "Header Type:",
+    body: "Body:",
+    footer: "Footer:",
+    buttons: "Buttons:",
+    csvFile: "(.csv)",
+    uploadHeaderMedia: "Upload Header Media",
     // Generic
     sidebar: "Sidebar",
     logout: "Logout",
@@ -264,8 +358,19 @@ export const translations = {
   },
 };
 
-export function lang(key, ...params) {
-  const selected = language || "en";
+export function lang(key, languageOrParams, ...restParams) {
+  let selected = "en";
+  let params = [];
+
+  if (typeof languageOrParams === "string") {
+    selected = languageOrParams;
+    params = restParams;
+  } else {
+    // No language explicitly passed, try localStorage fallback (legacy), else English
+    selected = localStorage.getItem("lang") || "en";
+    params = languageOrParams ? [languageOrParams, ...restParams] : [];
+  }
+
   const dict = translations[selected] || translations["en"];
   const value = dict[key];
   if (typeof value === "function") {

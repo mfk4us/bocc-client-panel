@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../components/supabaseClient";
+import { lang } from "../lang";
 
-export default function ManagePages() {
+export default function ManagePages({ language }) {
   const [pages, setPages] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editRow, setEditRow] = useState(null);
@@ -30,12 +31,14 @@ export default function ManagePages() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">🔧 Manage Tenant Page Access</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        🔧 {lang("manageTenantPageAccess", language)}
+      </h2>
 
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search workflows..."
+          placeholder={lang("searchWorkflows", language)}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border p-2 rounded w-64"
@@ -85,7 +88,7 @@ export default function ManagePages() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded p-6 w-[500px]">
               <h3 className="text-xl font-semibold mb-4">
-                Edit Access for <span className="text-blue-600">{editRow.workflow_name}</span>
+                {lang("editAccessFor", language)} <span className="text-blue-600">{editRow.workflow_name}</span>
               </h3>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {pageKeys.map((key) => (
@@ -107,7 +110,7 @@ export default function ManagePages() {
                   onClick={() => setEditRow(null)}
                   className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
                 >
-                  Cancel
+                  {lang("cancel", language)}
                 </button>
                 <button
                   onClick={async () => {
@@ -125,7 +128,7 @@ export default function ManagePages() {
                   }}
                   className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  Save Changes
+                  {lang("saveChanges", language)}
                 </button>
               </div>
             </div>

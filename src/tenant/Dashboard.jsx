@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../components/supabaseClient";
-import { lang, language } from "../lang";
+import { lang } from "../lang";
 
-export default function Dashboard() {
+export default function Dashboard({ language }) {
   const [stats, setStats] = useState({ totalMessages: 0, sentToday: 0 });
 
   useEffect(() => {
@@ -35,14 +35,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-        {lang("dashboard")}
+        {lang("dashboard", language)}
       </h2>
       <div className="bg-white dark:bg-gray-800 shadow rounded p-4">
         <p className="text-gray-800 dark:text-gray-100 font-medium">
-          📦 {lang("totalMessages")}: {stats?.totalMessages || 0}
+          📦 {lang("totalMessages", language)}: {stats?.totalMessages || 0}
         </p>
         <p className="text-gray-800 dark:text-gray-100 font-medium">
-          📩 {lang("sentToday")}: {stats?.sentToday || 0}
+          📩 {lang("sentToday", language)}: {stats?.sentToday || 0}
         </p>
       </div>
     </div>

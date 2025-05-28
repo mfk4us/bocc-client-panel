@@ -501,7 +501,8 @@ export default function Messages() {
             <button
               onClick={() => setMobileView("list")}
               className="p-2 focus:outline-none"
-              aria-label="Back"
+              aria-label={lang("back")}
+              title={lang("back")}
             >
               ←
             </button>
@@ -511,7 +512,8 @@ export default function Messages() {
             <button
               onClick={() => navigate('/tenant/dashboard')}
               className="p-2 focus:outline-none"
-              aria-label="Back"
+              aria-label={lang("backToDashboard")}
+              title={lang("backToDashboard")}
             >
               ←
             </button>
@@ -529,12 +531,14 @@ export default function Messages() {
               value={leftSearchTerm}
               onChange={e => setLeftSearchTerm(e.target.value)}
               className="w-full pr-8 p-2 border rounded shadow-sm focus:ring-2 focus:ring-blue-400 text-xs sm:text-sm"
+              aria-label={lang("searchPlaceholder")}
             />
             {leftSearchTerm && (
               <button
                 onClick={() => setLeftSearchTerm("")}
                 className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-600 font-bold"
-                aria-label="Clear search"
+                aria-label={lang("clearSearch")}
+                title={lang("clearSearch")}
                 type="button"
               >×</button>
             )}
@@ -542,7 +546,8 @@ export default function Messages() {
           <button
             onClick={() => setLeftShowSortMenu(!leftShowSortMenu)}
             className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none"
-            aria-label="Sort chats"
+            aria-label={lang("sortChats")}
+            title={lang("sortChats")}
           >
             <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
@@ -636,7 +641,8 @@ export default function Messages() {
                   <button
                     onClick={() => setMobileView("list")}
                     className="p-2 focus:outline-none text-lg"
-                    aria-label="Back to chats"
+                    aria-label={lang("backToChats")}
+                    title={lang("backToChats")}
                     style={{ marginRight: 8 }}
                   >
                     ←
@@ -659,7 +665,8 @@ export default function Messages() {
                   <button
                     onClick={() => setSearchOpen(true)}
                     className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xl"
-                    aria-label="Search chat"
+                    aria-label={lang("searchChat")}
+                    title={lang("searchChat")}
                   >
                     🔍
                   </button>
@@ -672,18 +679,21 @@ export default function Messages() {
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       className="flex-1 pr-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring text-xs sm:text-sm"
+                      aria-label={lang("searchPlaceholder")}
                     />
                     <button
                       onClick={() => { setSearchTerm(''); setSearchOpen(false); }}
                       className="p-1 text-red-600 font-bold text-lg focus:outline-none"
-                      aria-label="Clear search"
+                      aria-label={lang("clearSearch")}
+                      title={lang("clearSearch")}
                     >
                       ×
                     </button>
                     <button
                       onClick={() => setShowSortMenu(!showSortMenu)}
                       className="p-2 bg-white dark:bg-gray-700 rounded focus:outline-none ml-1"
-                      aria-label="Sort messages"
+                      aria-label={lang("sortMessages")}
+                      title={lang("sortMessages")}
                       type="button"
                     >
                       <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -722,7 +732,8 @@ export default function Messages() {
                   <button
                     onClick={() => setDateOpen(true)}
                     className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xl"
-                    aria-label="Filter by date"
+                    aria-label={lang("filterByDate")}
+                    title={lang("filterByDate")}
                   >
                     📅
                   </button>
@@ -733,6 +744,7 @@ export default function Messages() {
                       value={selectedDate}
                       onChange={e => setSelectedDate(e.target.value)}
                       className="w-full pr-8 p-1 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      aria-label={lang("chooseDate")}
                     />
                     <button
                       onClick={() => {
@@ -740,7 +752,8 @@ export default function Messages() {
                         setDateOpen(false);
                       }}
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 text-red-600 font-bold text-2xl leading-none focus:outline-none"
-                      aria-label="Clear date filter"
+                      aria-label={lang("clearDateFilter")}
+                      title={lang("clearDateFilter")}
                       type="button"
                     >
                       ×
@@ -767,8 +780,10 @@ export default function Messages() {
                           <button
                             onClick={exportCSVfile}
                             className={`${active ? 'bg-gray-100 dark:bg-gray-600' : ''} group flex items-center px-4 py-2 text-sm w-full`}
+                            aria-label={lang("exportCSV")}
+                            title={lang("exportCSV")}
                           >
-                            <FiFile className="mr-2 h-5 w-5" /> CSV
+                            <FiFile className="mr-2 h-5 w-5" /> {lang("exportCSV")}
                           </button>
                         )}
                       </Menu.Item>
@@ -777,8 +792,10 @@ export default function Messages() {
                           <button
                             onClick={exportCSV}
                             className={`${active ? 'bg-gray-100 dark:bg-gray-600' : ''} group flex items-center px-4 py-2 text-sm w-full`}
+                            aria-label={lang("exportExcel")}
+                            title={lang("exportExcel")}
                           >
-                            <FiFilePlus className="mr-2 h-5 w-5" /> Excel
+                            <FiFilePlus className="mr-2 h-5 w-5" /> {lang("exportExcel")}
                           </button>
                         )}
                       </Menu.Item>
@@ -787,8 +804,10 @@ export default function Messages() {
                           <button
                             onClick={exportPDF}
                             className={`${active ? 'bg-gray-100 dark:bg-gray-600' : ''} group flex items-center px-4 py-2 text-sm w-full`}
+                            aria-label={lang("exportPDF")}
+                            title={lang("exportPDF")}
                           >
-                            <FiFileText className="mr-2 h-5 w-5" /> PDF
+                            <FiFileText className="mr-2 h-5 w-5" /> {lang("exportPDF")}
                           </button>
                         )}
                       </Menu.Item>
@@ -896,8 +915,8 @@ export default function Messages() {
                   }}
                   className="fixed inset-x-0 mx-auto bottom-28 z-30 flex justify-center w-fit bg-blue-500 text-white rounded-full shadow-lg p-3 opacity-90 hover:opacity-100 transition-all"
                   style={{ left: '50%', transform: 'translateX(-50%)' }}
-                  title="Scroll to latest message"
-                  aria-label="Scroll to bottom"
+                  title={lang("scrollToLatestMessage")}
+                  aria-label={lang("scrollToBottom")}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -909,19 +928,19 @@ export default function Messages() {
             {pendingMediaPreview && (
               <div className="flex items-center space-x-2 mb-2 border p-2 rounded bg-gray-50 relative">
                 {pendingMedia.type.startsWith("image/") ? (
-                  <img src={pendingMediaPreview} alt="preview" className="max-h-32 rounded" />
+                  <img src={pendingMediaPreview} alt={lang("imagePreview")} className="max-h-32 rounded" />
                 ) : false ? (
                   <audio controls src={pendingMediaPreview} className="max-w-xs" />
                 ) : pendingMedia.type === "application/pdf" ? (
-                  <span className="text-sm sm:text-base text-gray-700">PDF ready to send: {pendingMedia.name}</span>
+                  <span className="text-sm sm:text-base text-gray-700">{lang("pdfReadyToSend")}: {pendingMedia.name}</span>
                 ) : (
-                  <span className="text-sm sm:text-base text-gray-700">File ready: {pendingMedia.name}</span>
+                  <span className="text-sm sm:text-base text-gray-700">{lang("fileReady")}: {pendingMedia.name}</span>
                 )}
                 <button
                   onClick={() => { setPendingMedia(null); setPendingMediaPreview(null); }}
                   className="ml-2 text-red-500 hover:text-red-700 font-bold"
-                  aria-label="Remove file"
-                  title="Remove file"
+                  aria-label={lang("removeFile")}
+                  title={lang("removeFile")}
                 >×</button>
               </div>
             )}
@@ -936,10 +955,12 @@ export default function Messages() {
                       onChange={e => setNewMessage(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && sendMessage()}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none"
+                      aria-label={lang("typeMessagePlaceholder")}
                     />
                     <button
                       onClick={() => startRecording()}
-                      aria-label="Start recording"
+                      aria-label={lang("startRecording")}
+                      title={lang("startRecording")}
                       className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full shadow hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none"
                     >
                       <MicrophoneIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -954,12 +975,14 @@ export default function Messages() {
                     <button
                       onClick={() => fileInputRef.current.click()}
                       className="p-2 rounded hover:bg-gray-200"
-                      aria-label="Attach file"
+                      aria-label={lang("attachFile")}
+                      title={lang("attachFile")}
                     >📎</button>
                     <button
                       onClick={sendMessage}
                       disabled={isSending || !newMessage.trim()}
-                      aria-label="Send message"
+                      aria-label={lang("sendMessage")}
+                      title={lang("sendMessage")}
                       className={`p-3 rounded-full shadow ${
                         isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                       } text-white focus:outline-none`}
@@ -974,7 +997,8 @@ export default function Messages() {
                     {/* Send button now stops recording */}
                     <button
                       onClick={stopRecording}
-                      aria-label="Stop recording and send"
+                      aria-label={lang("stopRecordingAndSend")}
+                      title={lang("stopRecordingAndSend")}
                       className="p-3 bg-red-500 rounded-full shadow hover:bg-red-600 focus:outline-none text-white"
                     >
                       <PaperAirplaneIcon className="w-5 h-5" style={{ transform: "rotate(360deg)" }} />
@@ -1032,7 +1056,8 @@ export default function Messages() {
               <button
                 onClick={() => setImagePreviewUrl(null)}
                 className="absolute top-2 right-2 text-gray-300 hover:text-white bg-black bg-opacity-50 rounded-full px-3 py-1 font-bold"
-                aria-label="Close image preview"
+                aria-label={lang("closeImagePreview")}
+                title={lang("closeImagePreview")}
               >×</button>
             </Dialog.Panel>
           </Transition.Child>
@@ -1062,7 +1087,8 @@ export default function Messages() {
               type="button"
               onClick={() => setIsCustomerModalOpen(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-              aria-label="Close modal"
+              aria-label={lang("closeModal")}
+              title={lang("closeModal")}
             >
               ×
             </button>

@@ -9,24 +9,23 @@ import { useNavigate } from "react-router-dom";
 import { lang } from "../lang";
 
 // helper to format a timestamp as relative time (days/weeks/years/decades ago)
-function formatRelative(dateString) {
+function formatRelative(dateString, language) {
   const diffMs = Date.now() - new Date(dateString).getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays < 1) return lang("today");
-  if (diffDays < 7) return lang("daysAgo", diffDays);
+  if (diffDays < 1) return lang("today", language);
+  if (diffDays < 7) return lang("daysAgo", language, diffDays);
   const diffWeeks = Math.floor(diffDays / 7);
-  if (diffWeeks < 52) return lang("weeksAgo", diffWeeks);
+  if (diffWeeks < 52) return lang("weeksAgo", language, diffWeeks);
   const diffYears = Math.floor(diffDays / 365);
-  if (diffYears < 10) return lang("yearsAgo", diffYears);
+  if (diffYears < 10) return lang("yearsAgo", language, diffYears);
   const diffDecades = Math.floor(diffYears / 10);
-  return lang("decadesAgo", diffDecades);
+  return lang("decadesAgo", language, diffDecades);
 }
 
 // helper to format a timestamp as a duration without "ago" suffix
-function formatDuration(dateString) {
-  // Remove trailing " ago" or language equivalent
-  const rel = formatRelative(dateString);
-  const agoSuffix = lang("agoSuffix");
+function formatDuration(dateString, language) {
+  const rel = formatRelative(dateString, language);
+  const agoSuffix = lang("agoSuffix", language);
   if (rel.endsWith(agoSuffix)) {
     return rel.slice(0, -agoSuffix.length);
   }
@@ -34,7 +33,7 @@ function formatDuration(dateString) {
 }
 
 
-export default function Customers() {
+export default function Customers({ language }) {
   // Mobile detection state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   useEffect(() => {
@@ -225,7 +224,7 @@ export default function Customers() {
           <button
             onClick={() => navigate("/tenant/dashboard")}
             className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded focus:outline-none"
-            aria-label={lang("backToDashboard")}
+            aria-label={lang("backToDashboard", language)}
           >
             ←
           </button>
@@ -234,20 +233,20 @@ export default function Customers() {
           className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex-shrink-0 mr-auto"
           style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
-          📁 {lang("customerNotesTags")}
+          📁 {lang("customerNotesTags", language)}
         </h2>
         <div className="flex items-center flex-1 min-w-[120px] max-w-xs">
           <input
             type="text"
             value={globalFilter}
             onChange={e => setGlobalFilter(e.target.value)}
-            placeholder={lang("searchCustomers")}
+            placeholder={lang("searchCustomers", language)}
             className="flex-1 pl-3 pr-2 py-1 border rounded shadow-sm focus:outline-none focus:ring text-xs sm:text-sm"
           />
           <button
             onClick={() => setShowSortMenu(!showSortMenu)}
             className="ml-2 p-2 bg-white dark:bg-gray-800 rounded focus:outline-none"
-            aria-label={lang("sortOptions")}
+            aria-label={lang("sortOptions", language)}
           >
             <ArrowsUpDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
@@ -264,7 +263,7 @@ export default function Customers() {
                   className="flex items-center justify-between w-full px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
                 >
                   <span>
-                    {lang(key + "Header")}
+                    {lang(key + "Header", language)}
                   </span>
                   {sortConfig.key === key && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                 </button>
@@ -281,7 +280,7 @@ export default function Customers() {
           <thead className="bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white">
             <tr>
               <th className="text-center p-2 sm:p-3 text-sm sm:text-base">#</th>
-              <th className="text-center p-2 sm:p-3 text-sm sm:text-base">{lang("avatarHeader")}</th>
+              <th className="text-center p-2 sm:p-3 text-sm sm:text-base">{lang("avatarHeader", language)}</th>
               <th className="text-center p-2 sm:p-3 text-sm sm:text-base">
                 <button onClick={() => {
                   const key = "name";
@@ -289,7 +288,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("nameHeader")}</span>
+                  <span>{lang("nameHeader", language)}</span>
                   {sortConfig.key === "name" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -302,7 +301,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("phoneHeader")}</span>
+                  <span>{lang("phoneHeader", language)}</span>
                   {sortConfig.key === "phone" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -315,7 +314,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("tagsHeader")}</span>
+                  <span>{lang("tagsHeader", language)}</span>
                   {sortConfig.key === "tags" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -328,7 +327,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("notesHeader")}</span>
+                  <span>{lang("notesHeader", language)}</span>
                   {sortConfig.key === "notes" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -341,7 +340,7 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("customerAgeHeader")}</span>
+                  <span>{lang("customerAgeHeader", language)}</span>
                   {sortConfig.key === "first_seen" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
@@ -354,13 +353,13 @@ export default function Customers() {
                   if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
                   setSortConfig({ key, direction });
                 }} className="flex items-center space-x-1">
-                  <span>{lang("daysSinceContactHeader")}</span>
+                  <span>{lang("daysSinceContactHeader", language)}</span>
                   {sortConfig.key === "last_seen" && (
                     <span>{sortConfig.direction === "asc" ? "▲" : "▼"}</span>
                   )}
                 </button>
               </th>
-              <th className="text-center p-3">{lang("actionsHeader")}</th>
+              <th className="text-center p-3">{lang("actionsHeader", language)}</th>
             </tr>
             <tr className="bg-gray-100 dark:bg-gray-700">
               <th></th>
@@ -371,7 +370,7 @@ export default function Customers() {
                     type="text"
                     value={columnFilters[col]}
                     onChange={e => setColumnFilters(prev => ({...prev, [col]: e.target.value}))}
-                    placeholder={lang(col + "Filter") || `${lang("filter")} ${lang(col + "Header")}`}
+                    placeholder={lang(col + "Filter", language) || `${lang("filter", language)} ${lang(col + "Header", language)}`}
                     className="w-full p-1 border rounded text-sm bg-white dark:bg-gray-800"
                   />
                 </th>
@@ -386,17 +385,17 @@ export default function Customers() {
                 <tr key={cust.id} className="border-t hover:bg-gray-100 dark:hover:bg-gray-800">
                   <td className="p-3 text-center font-medium text-gray-900 dark:text-white">{pageIndex * pageSize + index + 1}</td>
                   <td className="p-3 text-center">
-                    <img src={defaultAvatar} alt={lang("avatarAlt")} className="w-8 h-8 rounded-full" />
+                    <img src={defaultAvatar} alt={lang("avatarAlt", language)} className="w-8 h-8 rounded-full" />
                   </td>
                   <td className="p-3 text-left font-medium text-gray-900 dark:text-white">{cust.name}</td>
                   <td className="p-3 text-center text-gray-900 dark:text-white">{cust.phone}</td>
                   <td className="p-3 text-left text-sm text-gray-300">{noteEntry.tags}</td>
                   <td className="p-3 text-left text-sm text-gray-300">{noteEntry.notes}</td>
                   <td className="p-3 text-center text-gray-900 dark:text-white">
-                    {cust.first_seen ? formatDuration(cust.first_seen) : ""}
+                    {cust.first_seen ? formatDuration(cust.first_seen, language) : ""}
                   </td>
                   <td className="p-3 text-center text-gray-900 dark:text-white">
-                    {cust.last_seen ? formatRelative(cust.last_seen) : ""}
+                    {cust.last_seen ? formatRelative(cust.last_seen, language) : ""}
                   </td>
                   <td className="p-3 text-center">
                     <button
@@ -408,7 +407,7 @@ export default function Customers() {
                       }}
                       className="text-blue-600 hover:underline text-sm"
                     >
-                      {lang("edit")}
+                      {lang("edit", language)}
                     </button>
                   </td>
                 </tr>
@@ -431,12 +430,12 @@ export default function Customers() {
                     setTags(noteEntry.tags || "");
                   }}
                   className="absolute top-2 right-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-full focus:outline-none text-xs"
-                  aria-label={lang("edit")}
+                  aria-label={lang("edit", language)}
                 >
                   ✏️
                 </button>
                 <div className="flex items-center space-x-2 mb-1">
-                  <img src={defaultAvatar} alt={lang("avatarAlt")} className="w-10 h-10 rounded-full" />
+                  <img src={defaultAvatar} alt={lang("avatarAlt", language)} className="w-10 h-10 rounded-full" />
                   <div className="flex items-center space-x-1">
                     {cust.name ? (
                       <>
@@ -456,12 +455,12 @@ export default function Customers() {
                 </div>
                 <div className="grid grid-cols-2 gap-1">
                   <div className="space-y-1">
-                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("tagsLabel")}:</span> {noteEntry.tags || lang("dash")}</div>
-                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("notesLabel")}:</span> {noteEntry.notes || lang("dash")}</div>
+                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("tagsLabel", language)}:</span> {noteEntry.tags || lang("dash", language)}</div>
+                    <div className="text-[10px] sm:text-xs truncate"><span className="font-medium">{lang("notesLabel", language)}:</span> {noteEntry.notes || lang("dash", language)}</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xs"><span className="font-medium">{lang("firstSeenLabel")}:</span> {cust.first_seen ? formatDuration(cust.first_seen) : lang("dash")}</div>
-                    <div className="text-xs"><span className="font-medium">{lang("lastSeenLabel")}:</span> {cust.last_seen ? formatRelative(cust.last_seen) : lang("dash")}</div>
+                    <div className="text-xs"><span className="font-medium">{lang("firstSeenLabel", language)}:</span> {cust.first_seen ? formatDuration(cust.first_seen, language) : lang("dash", language)}</div>
+                    <div className="text-xs"><span className="font-medium">{lang("lastSeenLabel", language)}:</span> {cust.last_seen ? formatRelative(cust.last_seen, language) : lang("dash", language)}</div>
                   </div>
                 </div>
               </div>
@@ -482,6 +481,7 @@ export default function Customers() {
       >
         <div className="text-center text-gray-700 dark:text-gray-300">
           {lang("showingCustomers",
+            language,
             (pageIndex * pageSize) + 1,
             Math.min((pageIndex + 1) * pageSize, sortedCustomers.length),
             sortedCustomers.length
@@ -495,7 +495,7 @@ export default function Customers() {
               className="p-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs"
             >
               {[10,20,50,100].map(size => (
-                <option key={size} value={size}>{lang("perPage", size)}</option>
+                <option key={size} value={size}>{lang("perPage", language, size)}</option>
               ))}
             </select>
             <button
@@ -503,7 +503,7 @@ export default function Customers() {
               disabled={pageIndex === 0}
               className="px-2 py-1 border rounded text-xs"
             >
-              {lang("prev")}
+              {lang("prev", language)}
             </button>
             <span className="text-xs">{pageIndex + 1} / {pageCount || 1}</span>
             <button
@@ -511,7 +511,7 @@ export default function Customers() {
               disabled={pageIndex >= pageCount - 1}
               className="px-2 py-1 border rounded text-xs"
             >
-              {lang("next")}
+              {lang("next", language)}
             </button>
           </div>
         ) : (
@@ -522,7 +522,7 @@ export default function Customers() {
               className="p-1 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs sm:text-sm"
             >
               {[10,20,50,100].map(size => (
-                <option key={size} value={size}>{lang("perPage", size)}</option>
+                <option key={size} value={size}>{lang("perPage", language, size)}</option>
               ))}
             </select>
             <button
@@ -530,7 +530,7 @@ export default function Customers() {
               disabled={pageIndex === 0}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              {lang("prev")}
+              {lang("prev", language)}
             </button>
             <span>{pageIndex + 1} / {pageCount || 1}</span>
             <button
@@ -538,7 +538,7 @@ export default function Customers() {
               disabled={pageIndex >= pageCount - 1}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              {lang("next")}
+              {lang("next", language)}
             </button>
           </div>
         )}
@@ -551,24 +551,24 @@ export default function Customers() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              ✏️ {lang("edit")} {editingCustomer}
+              ✏️ {lang("edit", language)} {editingCustomer}
             </h3>
 
-            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("tagsCommaSeparated")}</label>
+            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("tagsCommaSeparated", language)}</label>
             <input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               className="w-full p-2 border rounded mb-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              placeholder={lang("tagsPlaceholder")}
+              placeholder={lang("tagsPlaceholder", language)}
             />
 
-            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("notesLabel")}</label>
+            <label className="block mb-2 font-medium text-gray-900 dark:text-gray-100">{lang("notesLabel", language)}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full p-2 border rounded mb-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              placeholder={lang("notesPlaceholder")}
+              placeholder={lang("notesPlaceholder", language)}
               rows={4}
             />
 
@@ -582,13 +582,13 @@ export default function Customers() {
                 }}
                 className="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded text-gray-900 dark:text-gray-100"
               >
-                {lang("cancel")}
+                {lang("cancel", language)}
               </button>
               <button
                 onClick={handleSave}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
-                {lang("save")}
+                {lang("save", language)}
               </button>
             </div>
           </div>

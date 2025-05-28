@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../components/supabaseClient";
 import INTEGRATION_PROVIDERS from "../data/integrationProviders";
+import { lang } from "../lang";
 
-export default function Integration({ workflowName }) {
+export default function Integration({ workflowName, language }) {
   const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -99,27 +100,27 @@ export default function Integration({ workflowName }) {
     setSuccess("");
 
     if (!form.integration_type) {
-      setError("Integration type is required.");
+      setError(lang("integrationTypeRequired", language));
       return;
     }
 
     let configObj;
     if (form.integration_type === "custom") {
       if (!form.config) {
-        setError("Config is required.");
+        setError(lang("configRequired", language));
         return;
       }
       try {
         configObj = JSON.parse(form.config);
       } catch {
-        setError("Config must be valid JSON.");
+        setError(lang("configMustBeValidJSON", language));
         return;
       }
     } else {
       try {
         configObj = form.config ? JSON.parse(form.config) : {};
       } catch {
-        setError("Config must be valid JSON.");
+        setError(lang("configMustBeValidJSON", language));
         return;
       }
     }
@@ -139,11 +140,11 @@ export default function Integration({ workflowName }) {
         .update(payload)
         .eq("id", form.id);
       errorObj = error;
-      setSuccess(error ? "" : "Integration updated!");
+      setSuccess(error ? "" : lang("integrationUpdated", language));
     } else {
       const { error } = await supabase.from("integrations").insert([payload]);
       errorObj = error;
-      setSuccess(error ? "" : "Integration added!");
+      setSuccess(error ? "" : lang("integrationAdded", language));
     }
     if (errorObj) setError(errorObj.message);
     else handleCancel();
@@ -151,7 +152,7 @@ export default function Integration({ workflowName }) {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Are you sure you want to delete this integration?")) return;
+    if (!window.confirm(lang("confirmDeleteIntegration", language))) return;
     await supabase.from("integrations").delete().eq("id", id);
     fetchIntegrations();
   }
@@ -167,7 +168,7 @@ export default function Integration({ workflowName }) {
 
   return (
     <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Integrations</h2>
+      <h2 className="text-2xl font-bold mb-4">{lang("integrations", language)}</h2>
       <form onSubmit={handleSubmit} className="bg-white rounded p-4 shadow mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
           <select
@@ -177,7 +178,7 @@ export default function Integration({ workflowName }) {
             className="border p-2 rounded flex items-center"
             required
           >
-            <option value="">Select Integration Type</option>
+            <option value="">{lang("selectIntegrationType", language)}</option>
             {INTEGRATION_PROVIDERS.map((provider) => (
               <option key={provider.integration_type} value={provider.integration_type}>
                 {provider.label}
@@ -187,7 +188,7 @@ export default function Integration({ workflowName }) {
           <input
             type="text"
             name="label"
-            placeholder="Label (optional)"
+            placeholder={lang("labelOptional", language)}
             value={form.label}
             onChange={handleChange}
             className="border p-2 rounded"
@@ -201,7 +202,7 @@ export default function Integration({ workflowName }) {
               onChange={handleChange}
               className="mr-2"
             />
-            Active
+            {lang("active", language)}
           </label>
         </div>
         {selectedProvider && selectedProvider.integration_type !== "custom" && (
@@ -226,7 +227,7 @@ export default function Integration({ workflowName }) {
             {selectedProvider.doc_url && (
               <div className="text-xs text-blue-600 underline mt-1">
                 <a href={selectedProvider.doc_url} target="_blank" rel="noopener noreferrer">
-                  Documentation
+                  {lang("documentation", language)}
                 </a>
               </div>
             )}
@@ -236,7 +237,7 @@ export default function Integration({ workflowName }) {
           <div className="mb-2">
             <textarea
               name="config"
-              placeholder='Config (JSON, e.g. {"api_key":"sk-...",...})'
+              placeholder={lang("configTextareaPlaceholder", language)}
               value={form.config}
               onChange={handleChange}
               className="border p-2 rounded w-full font-mono"
@@ -252,7 +253,7 @@ export default function Integration({ workflowName }) {
             type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
           >
-            {editing ? "Update" : "Add Integration"}
+            {editing ? lang("update", language) : lang("addIntegration", language)}
           </button>
           {editing && (
             <button
@@ -260,24 +261,24 @@ export default function Integration({ workflowName }) {
               className="bg-gray-300 px-4 py-2 rounded"
               onClick={handleCancel}
             >
-              Cancel
+              {lang("cancel", language)}
             </button>
           )}
         </div>
       </form>
 
-      <h3 className="text-xl font-semibold mb-2">Your Integrations</h3>
+      <h3 className="text-xl font-semibold mb-2">{lang("yourIntegrations", language)}</h3>
       {loading ? (
-        <div>Loading...</div>
+        <div>{lang("loading", language)}</div>
       ) : (
         <table className="w-full text-left border">
           <thead>
             <tr className="bg-gray-100">
-              <th className="p-2">Type</th>
-              <th className="p-2">Label</th>
-              <th className="p-2">Active</th>
-              <th className="p-2">Config</th>
-              <th className="p-2">Actions</th>
+              <th className="p-2">{lang("type", language)}</th>
+              <th className="p-2">{lang("label", language)}</th>
+              <th className="p-2">{lang("active", language)}</th>
+              <th className="p-2">{lang("config", language)}</th>
+              <th className="p-2">{lang("actions", language)}</th>
             </tr>
           </thead>
           <tbody>
@@ -303,13 +304,13 @@ export default function Integration({ workflowName }) {
                       className="bg-yellow-400 text-white px-2 py-1 rounded"
                       onClick={() => handleEdit(intg)}
                     >
-                      Edit
+                      {lang("edit", language)}
                     </button>
                     <button
                       className="bg-red-600 text-white px-2 py-1 rounded"
                       onClick={() => handleDelete(intg.id)}
                     >
-                      Delete
+                      {lang("delete", language)}
                     </button>
                   </td>
                 </tr>
@@ -318,7 +319,7 @@ export default function Integration({ workflowName }) {
             {integrations.length === 0 && (
               <tr>
                 <td colSpan={5} className="text-gray-400 text-center p-4">
-                  No integrations found.
+                  {lang("noIntegrationsFound", language)}
                 </td>
               </tr>
             )}

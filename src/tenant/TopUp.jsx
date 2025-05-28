@@ -1,8 +1,9 @@
 // src/tenant/TopUp.jsx
 import { useEffect, useState } from "react";
 import { supabase } from "../components/supabaseClient";
+import { lang } from "../lang";
 
-export default function TopUp() {
+export default function TopUp({ language }) {
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const tenantWorkflow = localStorage.getItem("workflow");
@@ -30,19 +31,20 @@ export default function TopUp() {
 
   return (
     <div className="p-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">💳 Top-Up Dashboard</h2>
+      <h2 className="text-xl font-bold mb-4">💳 {lang("topUpDashboard", language)}</h2>
       {loading ? (
-        <p>Loading...</p>
+        <p>{lang("loading", language)}</p>
       ) : (
         <>
           <p className="mb-4 text-lg">
-            Current Balance: <span className="font-semibold text-blue-600">SAR {balance}</span>
+            {lang("currentBalance", language)}{" "}
+            <span className="font-semibold text-blue-600">SAR {balance}</span>
           </p>
 
           <div className="border-t pt-4">
-            <h3 className="font-semibold mb-2">Top-Up (Coming Soon)</h3>
+            <h3 className="font-semibold mb-2">{lang("topUpComingSoonTitle", language)}</h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              You will be able to top up your balance using Tap Payments or other methods.
+              {lang("topUpComingSoonDesc", language)}
             </p>
           </div>
         </>

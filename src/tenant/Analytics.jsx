@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../components/supabaseClient"; // ✅
 // import { format } from "date-fns";
 import { Transition } from "@headlessui/react";
+import { lang } from "../lang";
 
-export default function Analytics() {
+export default function Analytics({ language }) {
   const [messages, setMessages] = useState([]);
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [show, setShow] = useState(false);
@@ -37,7 +38,7 @@ export default function Analytics() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-        📈 Chat Analytics
+        📈 {lang("chatAnalytics", language)}
       </h2>
 
       <div className="flex items-center gap-4 mb-6">
@@ -57,7 +58,7 @@ export default function Analytics() {
           onClick={() => setShow(!show)}
           className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
         >
-          {show ? "Hide" : "Show"} Trends
+          {show ? lang("hideTrends", language) : lang("showTrends", language)}
         </button>
       </div>
 
@@ -77,7 +78,7 @@ export default function Analytics() {
               className="flex justify-between bg-white dark:bg-gray-800 p-4 rounded shadow-md"
             >
               <span className="font-medium text-gray-900 dark:text-gray-100">{new Date(date).toLocaleDateString()}</span>
-              <span className="text-blue-700 dark:text-blue-400 font-semibold">{count} messages</span>
+              <span className="text-blue-700 dark:text-blue-400 font-semibold">{count} {lang("messages", language)}</span>
             </div>
           ))}
         </div>

@@ -1,8 +1,9 @@
 import React from "react";
 import { ResponsiveHeatMap } from '@nivo/heatmap';
 import { Card, Typography } from "@mui/material";
+import { lang } from "../lang";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ language }) {
   const data = [
     {
       id: 'Mon',
@@ -73,7 +74,7 @@ export default function AdminDashboard() {
     <div className="p-6 h-[600px] bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100">
       <Card className="p-6 h-full bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100">
         <Typography variant="h6" gutterBottom>
-          📊 Tenant Usage Heatmap
+          📊 {lang("tenantUsageHeatmap", language)}
         </Typography>
         <div style={{ height: 500 }}>
           <ResponsiveHeatMap

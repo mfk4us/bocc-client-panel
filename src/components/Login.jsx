@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "../components/supabaseClient";
 
-export default function Login() {
+export default function Login({ setRole }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -56,9 +56,11 @@ export default function Login() {
       localStorage.setItem('email', authData.user.email);
     }
 
+    if (setRole) setRole(profile.role);
+
     const destination = profile.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard';
     console.log(`Redirecting to ${destination}`);
-    window.location.href = destination;
+    navigate(destination);
   };
 
   return (

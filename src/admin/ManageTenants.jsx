@@ -8,6 +8,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { Menu, Transition } from "@headlessui/react";
 import { Combobox } from "@headlessui/react";
+import { lang } from "../lang";
 
 function SkeletonRow() {
   return (
@@ -21,7 +22,7 @@ function SkeletonRow() {
   );
 }
 
-export default function ManageTenants() {
+export default function ManageTenants({ language }) {
   const [tenants, setTenants] = useState([]);
   const [filteredTenants, setFilteredTenants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -293,7 +294,7 @@ export default function ManageTenants() {
         <header className="relative flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-              🔧 Manage Tenants
+              🔧 {lang("manageTenants", language)}
             </h1>
             <button
               onClick={() => { setLoading(true); fetchTenants(); }}
@@ -334,7 +335,7 @@ export default function ManageTenants() {
               }}
               className="ml-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
-              ➕ Add Tenant
+              ➕ {lang("addTenant", language)}
             </button>
           </div>
           <div className="flex items-center gap-3">
@@ -350,7 +351,7 @@ export default function ManageTenants() {
               {showSearchInput && (
                 <input
                   type="text"
-                  placeholder="Search…"
+                  placeholder={lang("searchTenants", language)}
                   className="absolute top-1/2 right-0 transform -translate-y-1/2 w-64 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-lg"
                   value={query}
                   onChange={handleSearchChange}
@@ -440,7 +441,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Customer"
+                          placeholder={lang("filterCustomer", language)}
                           value={columnFilters.customer_name}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, customer_name: e.target.value })
@@ -466,7 +467,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Email"
+                          placeholder={lang("filterEmail", language)}
                           value={columnFilters.email}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, email: e.target.value })
@@ -492,7 +493,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Role"
+                          placeholder={lang("filterRole", language)}
                           value={columnFilters.role}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, role: e.target.value })
@@ -518,7 +519,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Workflow"
+                          placeholder={lang("filterWorkflow", language)}
                           value={columnFilters.workflow_name}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, workflow_name: e.target.value })
@@ -544,7 +545,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Phone"
+                          placeholder={lang("filterPhone", language)}
                           value={columnFilters.phone_number}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, phone_number: e.target.value })
@@ -570,7 +571,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Business"
+                          placeholder={lang("filterBusiness", language)}
                           value={columnFilters.business_name}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, business_name: e.target.value })
@@ -596,7 +597,7 @@ export default function ManageTenants() {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Filter Status"
+                          placeholder={lang("filterStatus", language)}
                           value={columnFilters.status}
                           onChange={e =>
                             setColumnFilters({ ...columnFilters, status: e.target.value })
@@ -625,7 +626,7 @@ export default function ManageTenants() {
                     <tr>
                       <td colSpan={10} className="p-8 text-center text-gray-600 dark:text-gray-400">
                         <div className="text-6xl mb-4">🗃️</div>
-                        No tenants match your filters.
+                        {lang("noTenantsMatchFilters", language)}
                       </td>
                     </tr>
                   ) : (
@@ -827,7 +828,7 @@ export default function ManageTenants() {
             ) : filteredTenants.length === 0 ? (
               <div className="text-center text-gray-600 dark:text-gray-400">
                 <div className="text-4xl mb-2">🗃️</div>
-                No tenants match your filters.
+                {lang("noTenantsMatchFilters", language)}
               </div>
             ) : (
               pagedTenants.map(t => (
@@ -895,14 +896,14 @@ export default function ManageTenants() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full space-y-4">
             <h3 className="text-lg font-semibold mb-2">
-              {editTenant?.id ? "Edit Tenant" : "Add New Tenant"}
+              {editTenant?.id ? lang("editTenant", language) : lang("addNewTenant", language)}
             </h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <input
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.email || ""}
                 onChange={(e) => setEditTenant({ ...editTenant, email: e.target.value })}
-                placeholder="Email"
+                placeholder={lang("email", language)}
               />
               <select
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
@@ -916,33 +917,33 @@ export default function ManageTenants() {
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.workflow_name || ""}
                 onChange={(e) => setEditTenant({ ...editTenant, workflow_name: e.target.value })}
-                placeholder="Workflow"
+                placeholder={lang("workflow", language)}
               />
               <input
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.phone_number || ""}
                 onChange={(e) => setEditTenant({ ...editTenant, phone_number: e.target.value })}
-                placeholder="Phone"
+                placeholder={lang("phone", language)}
               />
               <input
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.business_name || ""}
                 onChange={(e) => setEditTenant({ ...editTenant, business_name: e.target.value })}
-                placeholder="Business Name"
+                placeholder={lang("businessName", language)}
               />
               <input
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.customer_name || ""}
                 onChange={(e) => setEditTenant({ ...editTenant, customer_name: e.target.value })}
-                placeholder="Customer Name"
+                placeholder={lang("customerName", language)}
               />
               <select
                 className="p-2 border border-gray-300 rounded bg-white dark:bg-gray-700"
                 value={editTenant.status || "inactive"}
                 onChange={(e) => setEditTenant({ ...editTenant, status: e.target.value })}
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="active">{lang("active", language)}</option>
+                <option value="inactive">{lang("inactive", language)}</option>
               </select>
             </div>
             <div className="flex justify-end space-x-3 mt-4">
@@ -950,7 +951,7 @@ export default function ManageTenants() {
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                 onClick={() => setShowModal(false)}
               >
-                Cancel
+                {lang("cancel", language)}
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
@@ -1014,7 +1015,7 @@ export default function ManageTenants() {
                   }
                 }}
               >
-                Save Changes
+                {lang("saveChanges", language)}
               </button>
             </div>
           </div>
@@ -1023,14 +1024,16 @@ export default function ManageTenants() {
       {confirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full space-y-4">
-            <h3 className="text-lg font-semibold">Confirm Delete</h3>
-            <p>Are you sure you want to delete <strong>{confirmDelete.email}</strong>?</p>
+            <h3 className="text-lg font-semibold">{lang("confirmDelete", language)}</h3>
+            <p>
+              {lang("areYouSureDelete", language)} <strong>{confirmDelete.email}</strong>?
+            </p>
             <div className="flex justify-end space-x-3 mt-4">
               <button
                 className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                 onClick={() => setConfirmDelete(null)}
               >
-                Cancel
+                {lang("cancel", language)}
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
@@ -1050,7 +1053,7 @@ export default function ManageTenants() {
                   }
                 }}
               >
-                Delete
+                {lang("delete", language)}
               </button>
             </div>
           </div>

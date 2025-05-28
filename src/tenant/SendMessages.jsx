@@ -60,7 +60,7 @@ export default function SendMessages({ language }) {
       setMessage("");
     } catch (err) {
       console.error("Error loading templates:", err);
-      setFetchTemplatesError("Failed to load WhatsApp templates. Please check your connection or contact support.");
+      setFetchTemplatesError(lang("failedToLoadTemplates", language) || "Failed to load WhatsApp templates. Please check your connection or contact support.");
       setTemplates([]); // Clear templates so dropdown is empty and error is clear
     } finally {
       setFetchingTemplates(false);
@@ -74,7 +74,7 @@ export default function SendMessages({ language }) {
   // Send a single invite
   const handleSendSingle = async () => {
     if (!phone) {
-      setMessage("Please enter a phone number.");
+      setMessage(lang("pleaseEnterPhone", language) || "Please enter a phone number.");
       return;
     }
     // Prepend country code for full number and check for existing chat in last 24h
@@ -107,11 +107,11 @@ export default function SendMessages({ language }) {
           workflow_name: "bocctest",
         }]);
       if (error) throw error;
-      setMessage("Invite sent!");
+      setMessage(lang("inviteSent", language) || "Invite sent!");
       setPhone("");
     } catch (err) {
       console.error(err);
-      setMessage("Error sending invite.");
+      setMessage(lang("errorSendingInvite", language) || "Error sending invite.");
     } finally {
       setLoading(false);
     }
@@ -120,11 +120,11 @@ export default function SendMessages({ language }) {
   // Send bulk from CSV with template and optional media upload
   const handleSendBulk = async () => {
     if (!file) {
-      setMessage("Please select a CSV file.");
+      setMessage(lang("pleaseSelectCSV", language) || "Please select a CSV file.");
       return;
     }
     if (!selectedTemplate) {
-      setMessage("Please select a template.");
+      setMessage(lang("pleaseSelectTemplate", language) || "Please select a template.");
       return;
     }
     setLoading(true);
@@ -161,12 +161,12 @@ export default function SendMessages({ language }) {
         }),
       });
       if (!res.ok) throw new Error(`Webhook failed: ${res.statusText}`);
-      setMessage("Bulk webhook sent!");
+      setMessage(lang("bulkWebhookSent", language) || "Bulk webhook sent!");
       setFile(null);
       setMediaFile(null);
     } catch (err) {
       console.error(err);
-      setMessage("Error sending bulk messages.");
+      setMessage(lang("errorSendingBulk", language) || "Error sending bulk messages.");
     } finally {
       setLoading(false);
     }
@@ -175,11 +175,11 @@ export default function SendMessages({ language }) {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
-        {lang("messageCenter")}
+        {lang("messageCenter", language)}
       </h1>
 
       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-gray-800 dark:text-gray-200">
-        <strong>{lang("businessInitiatedCount")}</strong> {rollingCount}
+        <strong>{lang("businessInitiatedCount", language)}</strong> {rollingCount}
       </div>
 
       {/* Enhanced error message if templates fail to load */}
@@ -194,7 +194,7 @@ export default function SendMessages({ language }) {
       ) : null}
 
       <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("sendSingleInvite")}</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{lang("sendSingleInvite", language)}</h2>
         <div>
           <input
             type="tel"
@@ -204,7 +204,7 @@ export default function SendMessages({ language }) {
             className="w-full text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
           />
           <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-sm sm:text-base text-white font-medium rounded" onClick={handleSendSingle} disabled={loading}>
-            {loading ? lang("sending") : lang("send")}
+            {loading ? lang("sending", language) : lang("send", language)}
           </button>
         </div>
       </section>
@@ -212,7 +212,7 @@ export default function SendMessages({ language }) {
       {/* BULK SENDER - Unified section */}
       <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow flex flex-col gap-6">
         <h2 className="text-xl md:text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-          📤 {lang("bulkWhatsAppSender") || "Bulk WhatsApp Sender"}
+          📤 {lang("bulkWhatsAppSender", language) || "Bulk WhatsApp Sender"}
         </h2>
         {/* Fetch Templates Button */}
         <div className="mb-2">
@@ -221,7 +221,7 @@ export default function SendMessages({ language }) {
             disabled={fetchingTemplates}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium"
           >
-            {fetchingTemplates ? "Fetching Templates..." : "Fetch WhatsApp Templates"}
+            {fetchingTemplates ? lang("fetchingTemplates", language) : lang("fetchWhatsAppTemplates", language)}
           </button>
           {fetchTemplatesError && (
             <div className="mt-1 text-sm text-red-600">{fetchTemplatesError}</div>
@@ -230,14 +230,14 @@ export default function SendMessages({ language }) {
         {/* Step 1: Select Template */}
         <div>
           <label className="block font-medium mb-1">
-            1. {lang("selectTemplate")}
+            1. {lang("selectTemplate", language)}
           </label>
           <select
             value={selectedTemplate}
             onChange={e => setSelectedTemplate(e.target.value)}
             className="w-full border px-4 py-2 rounded"
           >
-            <option value="">-- {lang("chooseTemplate")} --</option>
+            <option value="">-- {lang("chooseTemplate", language)} --</option>
             {templates.map(t => (
               <option key={t.name} value={t.name}>
                 {t.name} ({t.language?.code || t.language})
@@ -246,7 +246,7 @@ export default function SendMessages({ language }) {
           </select>
           {selectedTemplateObj && (
             <div className="my-2 p-2 bg-gray-200 dark:bg-gray-800 rounded text-sm">
-              <strong>Template Preview:</strong>
+              <strong>{lang("templatePreview", language)}</strong>
               {/* Header preview */}
               {(() => {
                 const headerComp = selectedTemplateObj.components?.find(c => c.type === "HEADER");
@@ -255,34 +255,34 @@ export default function SendMessages({ language }) {
                 if (headerType === "IMAGE" && headerExampleUrl)
                   return (
                     <div>
-                      <b>Header (Image):</b>
+                      <b>{lang("headerImage", language)}:</b>
                       <img src={headerExampleUrl} alt="Sample header" width={100} className="my-2" />
                     </div>
                   );
                 if (headerType === "VIDEO" && headerExampleUrl)
                   return (
                     <div>
-                      <b>Header (Video):</b>
+                      <b>{lang("headerVideo", language)}:</b>
                       <video src={headerExampleUrl} width={180} controls className="my-2" />
                     </div>
                   );
                 if (headerType === "TEXT" && headerComp.text)
                   return (
                     <div>
-                      <b>Header (Text):</b> <span>{headerComp.text}</span>
+                      <b>{lang("headerText", language)}:</b> <span>{headerComp.text}</span>
                     </div>
                   );
                 if (headerType)
                   return (
                     <div>
-                      <b>Header Type:</b> {headerType}
+                      <b>{lang("headerType", language)}:</b> {headerType}
                     </div>
                   );
                 return null;
               })()}
               {/* Body preview */}
               <div>
-                <b>Body:</b>
+                <b>{lang("body", language)}:</b>
                 <pre className="whitespace-pre-wrap">
                   {selectedTemplateObj.components?.find(c => c.type === "BODY")?.text || ""}
                 </pre>
@@ -290,7 +290,7 @@ export default function SendMessages({ language }) {
               {/* Footer preview */}
               {selectedTemplateObj.components?.find(c => c.type === "FOOTER")?.text && (
                 <div>
-                  <b>Footer:</b> {selectedTemplateObj.components.find(c => c.type === "FOOTER").text}
+                  <b>{lang("footer", language)}:</b> {selectedTemplateObj.components.find(c => c.type === "FOOTER").text}
                 </div>
               )}
               {/* Buttons preview */}
@@ -299,7 +299,7 @@ export default function SendMessages({ language }) {
                 if (btnComp && btnComp.buttons && btnComp.buttons.length > 0) {
                   return (
                     <div>
-                      <b>Buttons:</b>
+                      <b>{lang("buttons", language)}:</b>
                       <ul>
                         {btnComp.buttons.map((btn, i) => (
                           <li key={i}>{btn.type}: {btn.text} {btn.url ? <a href={btn.url} target="_blank" rel="noopener noreferrer">{btn.url}</a> : ""}</li>
@@ -316,7 +316,7 @@ export default function SendMessages({ language }) {
         {/* Step 2: Upload CSV and optional media */}
         <div>
           <label className="block font-medium mb-1">
-            2. {lang("bulkUpload")} (.csv)
+            2. {lang("bulkUpload", language)} ({lang("csvFile", language)})
           </label>
           <input
             type="file"
@@ -331,7 +331,7 @@ export default function SendMessages({ language }) {
             if (headerType === "IMAGE" || headerType === "VIDEO") {
               return (
                 <>
-                  <label className="block mb-1">{lang("uploadHeaderMedia")}</label>
+                  <label className="block mb-1">{lang("uploadHeaderMedia", language)}</label>
                   <input
                     type="file"
                     onChange={e => setMediaFile(e.target.files[0])}
@@ -349,7 +349,7 @@ export default function SendMessages({ language }) {
           onClick={handleSendBulk}
           disabled={loading}
         >
-          {loading ? lang("sending") : lang("uploadAndSend")}
+          {loading ? lang("sending", language) : lang("uploadAndSend", language)}
         </button>
       </section>
     </div>

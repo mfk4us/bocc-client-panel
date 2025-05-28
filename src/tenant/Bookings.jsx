@@ -4,8 +4,9 @@ import { supabase } from "../components/supabaseClient";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import "react-datepicker/dist/react-datepicker.css";
+import { lang } from "../lang";
 
-export default function Bookings() {
+export default function Bookings({ language }) {
   const [bookings, setBookings] = useState([]);
   const [viewMode, setViewMode] = useState("table");
   const workflowName = localStorage.getItem("workflow");
@@ -37,12 +38,12 @@ export default function Bookings() {
   return (
     <div className="p-6">
       <div className="flex justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">📅 Bookings</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{lang("bookings", language)}</h2>
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
           onClick={() => setViewMode(viewMode === "calendar" ? "table" : "calendar")}
         >
-          Switch to {viewMode === "calendar" ? "Table" : "Calendar"} View
+          {lang("switchTo", language)} {viewMode === "calendar" ? lang("table", language) : lang("calendar", language)} {lang("view", language)}
         </button>
       </div>
 
@@ -56,17 +57,17 @@ export default function Bookings() {
       ) : (
         <>
           {bookings.length === 0 && (
-            <p className="text-gray-500 dark:text-gray-400 mt-4">No bookings found.</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-4">{lang("noBookingsFound", language)}</p>
           )}
           {bookings.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border border-gray-300 dark:border-gray-600">
                 <thead className="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
                   <tr className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <th className="p-2 border border-gray-300 dark:border-gray-600">Date</th>
-                    <th className="p-2 border border-gray-300 dark:border-gray-600">Customer</th>
-                    <th className="p-2 border border-gray-300 dark:border-gray-600">Service</th>
-                    <th className="p-2 border border-gray-300 dark:border-gray-600">Staff</th>
+                    <th className="p-2 border border-gray-300 dark:border-gray-600">{lang("date", language)}</th>
+                    <th className="p-2 border border-gray-300 dark:border-gray-600">{lang("customer", language)}</th>
+                    <th className="p-2 border border-gray-300 dark:border-gray-600">{lang("service", language)}</th>
+                    <th className="p-2 border border-gray-300 dark:border-gray-600">{lang("staff", language)}</th>
                   </tr>
                 </thead>
                 <tbody>
