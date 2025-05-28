@@ -1,11 +1,13 @@
 import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
 import { useUI } from "../context/UIContext";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 export default function Layout({ language, ...props }) {
   const { showSidebar, showBottomNav, unreadMessages, unreadNotifications } = useUI();
   const { isMobile } = props;
+  const location = useLocation();
+  const isMessagesPage = location.pathname.startsWith("/tenant/messages");
   return (
     <div className="flex min-h-screen">
       {showSidebar && !isMobile && (
@@ -18,7 +20,7 @@ export default function Layout({ language, ...props }) {
       )}
       <main className="flex-1 flex flex-col relative min-h-0 w-full">
         <Outlet />
-        {showBottomNav && isMobile && (
+        {showBottomNav && isMobile && !isMessagesPage && (
           <BottomNav
             language={language}
             unreadMessages={unreadMessages}
