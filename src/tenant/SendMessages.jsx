@@ -17,6 +17,9 @@ export default function SendMessages({ language }) {
   const [fetchingTemplates, setFetchingTemplates] = useState(false);
   const [fetchTemplatesError, setFetchTemplatesError] = useState(null);
 
+  const [userName, setUserName] = useState("Unknown User");
+  const [workflowName, setWorkflowName] = useState("defaultWorkflow");
+
   // Helpers for preview and header type
   const selectedTemplateObj = templates.find(t => t.name === selectedTemplate);
 
@@ -33,6 +36,14 @@ export default function SendMessages({ language }) {
   const content = "Hi"; // Add a default content or get from state if needed
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = supabase.auth.user();
+    if (user) {
+      setUserName(user.user_metadata?.full_name || "Unknown User");
+      setWorkflowName(user.app_metadata?.workflow_name || "defaultWorkflow");
+    }
+  }, []);
 
   // Fetch rolling 24h count from your backend or Supabase
   useEffect(() => {
@@ -99,12 +110,12 @@ export default function SendMessages({ language }) {
         .from("messages")
         .insert([{
           timestamp: new Date().toISOString(),
-          type: "Farhan Khan",
+          type: userName,
           number: fullNumber,
           content: content,
           media_url: null,
-          contact_name: "محمد الشجاع",
-          workflow_name: "bocctest",
+          contact_name: null,
+          workflow_name: workflowName,
         }]);
       if (error) throw error;
       setMessage(lang("inviteSent", language) || "Invite sent!");
