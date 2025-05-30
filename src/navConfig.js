@@ -1,6 +1,7 @@
 import {
     HomeIcon,
     ChatBubbleLeftRightIcon,
+    ChatBubbleLeftEllipsisIcon,
     UsersIcon,
     Cog6ToothIcon,
     BellIcon,
@@ -31,22 +32,8 @@ import {
       {
         id: "messages",
         path: "/tenant/messages",
-        icon: ChatBubbleLeftRightIcon,
+        icon: ChatBubbleLeftEllipsisIcon,
         label: { en: "Messages", ar: "المحادثات" },
-        roles: ["tenant"],
-      },
-      {
-        id: "customers",
-        path: "/tenant/customers",
-        icon: UsersIcon,
-        label: { en: "Customers", ar: "العملاء" },
-        roles: ["tenant"],
-      },
-      {
-        id: "analytics",
-        path: "/tenant/analytics",
-        icon: ChartBarIcon,
-        label: { en: "Analytics", ar: "التحليلات" },
         roles: ["tenant"],
       },
       {
@@ -57,24 +44,17 @@ import {
         roles: ["tenant"],
       },
       {
-        id: "integration",
-        path: "/tenant/integration",
-        icon: LinkIcon,
-        label: { en: "Integration", ar: "الربط" },
-        roles: ["tenant"],
-      },
-      {
-        id: "notificationSettings",
-        path: "/tenant/notification-settings",
-        icon: BellIcon,
-        label: { en: "Notifications", ar: "الإشعارات" },
-        roles: ["tenant"],
-      },
-      {
-        id: "sendMessages",
-        path: "/tenant/send-messages",
+        id: "campaigns",
+        path: "/tenant/campaigns",
         icon: ChatBubbleLeftRightIcon,
-        label: { en: "Send Msgs", ar: "إرسال رسائل" },
+        label: { en: "Campaigns", ar: "الحملات" },
+        roles: ["tenant"],
+      },
+      {
+        id: "customers",
+        path: "/tenant/customers",
+        icon: UsersIcon,
+        label: { en: "Customers", ar: "العملاء" },
         roles: ["tenant"],
       },
       {
@@ -85,10 +65,31 @@ import {
         roles: ["tenant"],
       },
       {
+        id: "integration",
+        path: "/tenant/integration",
+        icon: LinkIcon,
+        label: { en: "Integration", ar: "الربط" },
+        roles: ["tenant"],
+      },
+      {
         id: "topUp",
         path: "/tenant/top-up",
         icon: BanknotesIcon,
         label: { en: "Top Up", ar: "شحن الرصيد" },
+        roles: ["tenant"],
+      },
+      {
+        id: "notificationSettings",
+        path: "/tenant/notification-settings",
+        icon: BellIcon,
+        label: { en: "Notifications", ar: "الإشعارات" },
+        roles: ["tenant"],
+      },
+      {
+        id: "reports",
+        path: "/tenant/reports",
+        icon: DocumentDuplicateIcon,
+        label: { en: "Reports", ar: "التقارير" },
         roles: ["tenant"],
       },
       {

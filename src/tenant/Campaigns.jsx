@@ -5,7 +5,7 @@ import { supabase } from "../components/supabaseClient";
 import { API_BASE_URL, TEMPLATE_WEBHOOK_URL } from "../config";
 import { useNavigate } from "react-router-dom";
 
-export default function SendMessages({ language }) {
+export default function Campaigns({ language }) {
   const [rollingCount, setRollingCount] = useState(0);
   const [phone, setPhone] = useState("");
   const [file, setFile] = useState(null);
@@ -38,11 +38,14 @@ export default function SendMessages({ language }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = supabase.auth.user();
-    if (user) {
-      setUserName(user.user_metadata?.full_name || "Unknown User");
-      setWorkflowName(user.app_metadata?.workflow_name || "defaultWorkflow");
+    async function fetchUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserName(data.user.user_metadata?.full_name || "Unknown User");
+        setWorkflowName(data.user.app_metadata?.workflow_name || "defaultWorkflow");
+      }
     }
+    fetchUser();
   }, []);
 
   // Fetch rolling 24h count from your backend or Supabase

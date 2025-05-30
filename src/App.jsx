@@ -18,11 +18,11 @@ import Customers from "./tenant/Customers";
 import Profile from "./tenant/Profile";
 import TopUp from "./tenant/TopUp";
 import Bookings from "./tenant/Bookings";
-import Analytics from "./tenant/Analytics";
 import NotificationSettings from "./tenant/NotificationSettings";
 import Team from "./tenant/Team";
-import SendMessages from "./tenant/SendMessages";
 import Integration from "./tenant/Integration";
+import Campaigns from "./tenant/Campaigns";
+import Reports from "./tenant/Reports";
 
 // Theme: Load from localStorage or system, and set <html> class
 function getInitialTheme() {
@@ -97,10 +97,10 @@ export default function App() {
                   <Route path="tenant/profile" element={<Profile language={language} />} />
                   <Route path="tenant/top-up" element={<TopUp language={language} />} />
                   <Route path="tenant/bookings" element={<Bookings language={language} />} />
-                  <Route path="tenant/analytics" element={<Analytics language={language} />} />
                   <Route path="tenant/notification-settings" element={<NotificationSettings language={language} />} />
                   <Route path="tenant/team" element={<Team language={language} />} />
-                  <Route path="tenant/send-messages" element={<SendMessages language={language} />} />
+                  <Route path="tenant/campaigns" element={<Campaigns language={language} />} />
+                  <Route path="tenant/reports" element={<Reports language={language} />} />
                   <Route path="tenant/integration" element={<Integration language={language} />} />
                   <Route path="tenant/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
                 </>

@@ -84,7 +84,7 @@ export default function Sidebar({ language, setLanguage, theme, setTheme, role }
                 ${
                   isActive
                     ? expanded
-                      ? "bg-gradient-to-br from-blue-100 to-violet-100 text-blue-700 shadow-sm ring-1 ring-blue-300 font-bold"
+                      ? "bg-gradient-to-br from-blue-100 to-violet-100 text-blue-700 shadow-sm ring-1 ring-blue-300 font-bold rounded-l-xl rounded-r-md mr-1"
                       : "bg-gradient-to-br from-blue-100 to-violet-100 text-blue-700 shadow-sm ring-1 ring-blue-300 font-bold"
                     : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
                 }

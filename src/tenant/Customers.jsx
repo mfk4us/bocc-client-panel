@@ -585,7 +585,7 @@ export default function Customers({ language }) {
   const handleBulkMessage = () => {
     if (selectedCustomers.length === 0) return;
     const selectedData = customers.filter(cust => selectedCustomers.includes(cust.phone));
-    navigate("/tenant/send-messages", { state: { importedData: selectedData } });
+    navigate("/tenant/campaigns", { state: { importedData: selectedData } });
   };
 
   // Bulk share handler
