@@ -1,3 +1,25 @@
+import {
+  MagnifyingGlassIcon,
+  ArrowDownTrayIcon,
+  FunnelIcon,
+  CheckCircleIcon,
+  ChatBubbleLeftEllipsisIcon,
+  ArrowsUpDownIcon,
+  CalendarDaysIcon,
+  XMarkIcon,
+  PlayCircleIcon,
+  PauseCircleIcon,
+  PaperAirplaneIcon,
+  ArrowPathIcon,
+  MicrophoneIcon,
+  PaperClipIcon,
+  ArrowLeftIcon
+} from '@heroicons/react/24/outline';
+// For solid styles:
+import {
+  CheckCircleIcon as CheckCircleSolidIcon,
+  XMarkIcon as XMarkSolidIcon
+} from '@heroicons/react/24/solid';
 // Utility: Get KSA time (+03:00) in ISO string format
 function getKsaIsoString() {
   // Get KSA time (+03:00) in correct format
@@ -67,9 +89,11 @@ function PremiumVoiceNotePlayer({ src, waveformColor = "#868CFF", width = 190, h
         type="button"
         style={{ outline: "none" }}
       >
-        <span className="material-icons text-[28px]">
-          {playing ? "pause" : "play_arrow"}
-        </span>
+        {playing ? (
+          <PauseCircleIcon className="h-7 w-7 text-[#868CFF]" />
+        ) : (
+          <PlayCircleIcon className="h-7 w-7 text-[#868CFF]" />
+        )}
       </button>
       {/* Waveform + progress overlay + seek */}
       <div
@@ -244,7 +268,6 @@ function detectMobileUI() {
 
   return false;
 }
-import { ArrowsUpDownIcon, MicrophoneIcon, PaperClipIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import ReactDOM from "react-dom";
 function MarkAllModal({ onConfirm, onCancel }) {
   return ReactDOM.createPortal(
@@ -252,7 +275,7 @@ function MarkAllModal({ onConfirm, onCancel }) {
       <div className="bg-[#f9fafe] border border-[#e6ecff] rounded-2xl shadow-2xl p-8 w-[95%] max-w-xs text-center animate-fade-in">
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 mb-2 rounded-full bg-gradient-to-br from-[#6BC2A1] to-[#868CFF] flex items-center justify-center shadow-lg">
-            <span className="material-icons text-white text-3xl">mark_email_read</span>
+            <CheckCircleIcon className="h-10 w-10 text-white" />
           </div>
           <div className="text-xl font-bold mb-1" style={{ color: '#868CFF', letterSpacing: '0.01em' }}>
             Mark all as read?
@@ -281,19 +304,6 @@ function MarkAllModal({ onConfirm, onCancel }) {
   );
 }
 import varibotixLogo from "../assets/varibotix-logo.jpg";
-import { MagnifyingGlassIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-// Inject Google Fonts Material Icons if not already present
-function useMaterialIconsFont() {
-  useEffect(() => {
-    if (!document.getElementById('material-icons-font')) {
-      const link = document.createElement('link');
-      link.id = 'material-icons-font';
-      link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
-      document.head.appendChild(link);
-    }
-  }, []);
-}
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -410,7 +420,6 @@ export default function Messages() {
     };
   }, []);
   // Material Icons font
-  useMaterialIconsFont();
   const [workflow, setWorkflow] = useState("");
   // Real-time unread chats count for notification badge integration
   const [unreadCount, setUnreadCount] = useState(0);
@@ -520,11 +529,13 @@ export default function Messages() {
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
 
-  // auto-scroll to bottom when chatHistory updates
+  // auto-scroll to bottom when chatHistory updates, with slight delay for DOM rendering
   const scrollRef = useRef(null);
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setTimeout(() => {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }, 50);
     }
   }, [chatHistory]);
 
@@ -1084,7 +1095,7 @@ export default function Messages() {
               aria-label={lang("back")}
               title={lang("back")}
             >
-              <span className="material-icons text-[#7a859e]">arrow_back</span>
+              <ArrowLeftIcon className="h-6 w-6 text-[#7a859e]" />
             </button>
           )}
           {/* On mobile, in list view, show back to dashboard button */}
@@ -1095,11 +1106,17 @@ export default function Messages() {
               aria-label={lang("backToDashboard")}
               title={lang("backToDashboard")}
             >
-              <span className="material-icons text-[#7a859e]">arrow_back</span>
+              <ArrowLeftIcon className="h-6 w-6 text-[#7a859e]" />
             </button>
           )}
           <div className="flex-1">
-            <span className="block font-medium text-base text-[#2a3444] truncate">{lang("recentChats")}</span>
+            <h1
+              className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white truncate flex items-center gap-2"
+              style={{ minWidth: 0 }}
+            >
+              <ChatBubbleLeftEllipsisIcon className="w-8 h-8" aria-hidden="true" />
+              {lang("recentChats")}
+            </h1>
             <p className="mt-1 text-[13px] md:text-[14px] text-[#7a859e]">{lang("showingLast24Hours")}</p>
           </div>
         </div>
@@ -1139,7 +1156,7 @@ export default function Messages() {
                 title="Sort chats by status, date, or name"
                 type="button"
               >
-                <span className="material-icons text-[#7a859e] text-[22px]">sort</span>
+                <ArrowsUpDownIcon className="h-5 w-5 text-[#7a859e]" />
               </button>
               {showSort && (
                 <div className="absolute right-0 mt-1 z-50 bg-white border rounded shadow text-sm w-44" onClick={e => e.stopPropagation()}>
@@ -1194,7 +1211,7 @@ export default function Messages() {
                 title="Filter chats by read/unread status"
                 type="button"
               >
-                <span className="material-icons">filter_list</span>
+                <FunnelIcon className="h-5 w-5 text-[#7a859e]" />
               </button>
               {showFilter && (
                 <div className="absolute right-0 mt-1 z-50 bg-white border rounded shadow text-sm w-36" onClick={e => e.stopPropagation()}>
@@ -1225,7 +1242,7 @@ export default function Messages() {
                 type="button"
                 style={{ opacity: 0.90 }}
               >
-                <span className="material-icons text-[22px]">done_all</span>
+                <CheckCircleIcon className="h-5 w-5 text-red-600" />
               </button>
             )}
             {/* Mark All Read Modal */}
@@ -1329,7 +1346,7 @@ export default function Messages() {
       })}
       {filteredChats.length === 0 && (
         <div className="p-6 text-center text-[#7a859e] flex flex-col items-center">
-          <span className="material-icons text-[48px] mb-2 text-[#eaf0f6]">chat_bubble_outline</span>
+          <ChatBubbleLeftEllipsisIcon className="h-12 w-12 mb-2 text-[#eaf0f6]" />
           <span className="font-medium text-base text-[#2a3444] truncate">{lang("noMessages")}</span>
         </div>
       )}
@@ -1379,7 +1396,7 @@ export default function Messages() {
                     title={lang("back")}
                     style={{ marginRight: 8 }}
                   >
-                    <span className="material-icons text-[#7a859e]">arrow_back</span>
+                    <ArrowLeftIcon className="h-6 w-6 text-[#7a859e]" />
                   </button>
                 )}
                 <button onClick={() => setIsCustomerModalOpen(true)} className="focus:outline-none flex-shrink-0">
@@ -1401,7 +1418,7 @@ export default function Messages() {
                     aria-label={lang("searchChat")}
                     title={lang("searchChat")}
                   >
-                    <span className="material-icons text-[#7a859e]">search</span>
+                    <MagnifyingGlassIcon className="h-5 w-5 text-[#7a859e]" />
                   </button>
                 ) : (
                   <div ref={sortContainerRef} className="relative flex items-center space-x-1 transition-all duration-200">
@@ -1430,7 +1447,7 @@ export default function Messages() {
                       title={lang("sortMessages")}
                       type="button"
                     >
-                      <span className="material-icons text-[#7a859e]">sort</span>
+                      <ArrowsUpDownIcon className="h-5 w-5 text-[#7a859e]" />
                     </button>
                     {showSortMenu && (
                       <div className="absolute mt-10 right-0 bg-white border rounded shadow p-2 z-40 w-40">
@@ -1468,7 +1485,7 @@ export default function Messages() {
                     aria-label={lang("filterByDate")}
                     title={lang("filterByDate")}
                   >
-                    <span className="material-icons text-[#7a859e]">event</span>
+                    <CalendarDaysIcon className="h-5 w-5 text-[#7a859e]" />
                   </button>
                 ) : (
                   <div className="w-56 relative transition-all duration-200">
@@ -1496,7 +1513,7 @@ export default function Messages() {
                 )}
                 <Menu as="div" className="relative inline-block text-left ml-2">
                   <Menu.Button className="inline-flex justify-center items-center p-2 border-none rounded-xl bg-[#eaf0f6] shadow-sm hover:bg-[#f7f8fa] focus:outline-none focus:ring-2 focus:ring-primary">
-                    <span className="material-icons text-[#7a859e]">download</span>
+                    <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e]" />
                   </Menu.Button>
                   <Transition
                     as={Fragment}
@@ -1516,7 +1533,7 @@ export default function Messages() {
                             aria-label={lang("exportCSV")}
                             title={lang("exportCSV")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportCSV")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportCSV")}
                           </button>
                         )}
                       </Menu.Item>
@@ -1528,7 +1545,7 @@ export default function Messages() {
                             aria-label={lang("exportExcel")}
                             title={lang("exportExcel")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportExcel")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportExcel")}
                           </button>
                         )}
                       </Menu.Item>
@@ -1540,7 +1557,7 @@ export default function Messages() {
                             aria-label={lang("exportPDF")}
                             title={lang("exportPDF")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportPDF")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportPDF")}
                           </button>
                         )}
                       </Menu.Item>
@@ -1680,7 +1697,7 @@ export default function Messages() {
                           className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full"
                           aria-label="Stop Recording and Send"
                         >
-                          <span className="material-icons text-[18px]">send</span>
+                          <PaperAirplaneIcon className="h-5 w-5" />
                         </button>
                       </div>
                     </div>
@@ -1754,7 +1771,7 @@ export default function Messages() {
                     aria-label={lang("back")}
                     title={lang("back")}
                   >
-                    <span className="material-icons text-[#7a859e] text-[24px]">arrow_back</span>
+                    <ArrowLeftIcon className="h-6 w-6 text-[#7a859e]" />
                   </button>
                 )}
                 <button onClick={() => setIsCustomerModalOpen(true)} className="focus:outline-none flex-shrink-0">
@@ -1779,7 +1796,7 @@ export default function Messages() {
                       aria-label={lang("searchChat")}
                       title={lang("searchChat")}
                     >
-                      <span className="material-icons text-[#7a859e] text-[24px]">search</span>
+                      <MagnifyingGlassIcon className="h-5 w-5 text-[#7a859e]" />
                     </button>
                   ) : (
                     <div className="relative w-64 h-10">
@@ -1815,7 +1832,7 @@ export default function Messages() {
                       aria-label={lang("filterByDate")}
                       title={lang("filterByDate")}
                     >
-                      <span className="material-icons text-[#7a859e] text-[24px]">event</span>
+                      <CalendarDaysIcon className="h-5 w-5 text-[#7a859e]" />
                     </button>
                   ) : (
                     <div className="flex items-center bg-[#eaf0f6] rounded-xl px-2 w-60 max-w-[200px] h-10">
@@ -1839,7 +1856,7 @@ export default function Messages() {
                 {/* EXPORT ICON */}
                 <Menu as="div" className="relative inline-block text-left">
                   <Menu.Button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white shadow-sm hover:bg-[#eaf0f6] focus:outline-none transition">
-                    <span className="material-icons text-[#7a859e] text-[24px]">download</span>
+                    <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e]" />
                   </Menu.Button>
                   <Transition
                     as={Fragment}
@@ -1859,7 +1876,7 @@ export default function Messages() {
                             aria-label={lang("exportCSV")}
                             title={lang("exportCSV")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportCSV")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportCSV")}
                           </button>
                         )}
                       </Menu.Item>
@@ -1871,7 +1888,7 @@ export default function Messages() {
                             aria-label={lang("exportExcel")}
                             title={lang("exportExcel")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportExcel")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportExcel")}
                           </button>
                         )}
                       </Menu.Item>
@@ -1883,7 +1900,7 @@ export default function Messages() {
                             aria-label={lang("exportPDF")}
                             title={lang("exportPDF")}
                           >
-                            <span className="material-icons mr-2 text-[#7a859e]">download</span> {lang("exportPDF")}
+                            <ArrowDownTrayIcon className="h-5 w-5 text-[#7a859e] mr-2" /> {lang("exportPDF")}
                           </button>
                         )}
                       </Menu.Item>

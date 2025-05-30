@@ -34,9 +34,13 @@ export default function Dashboard({ language }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+      <h1
+        className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white truncate flex items-center gap-2 mb-4"
+        style={{ minWidth: 0 }}
+      >
+        <span role="img" aria-label="Dashboard" className="w-8 h-8">📊</span>
         {lang("dashboard", language)}
-      </h2>
+      </h1>
       <div className="bg-white dark:bg-gray-800 shadow rounded p-4">
         <p className="text-gray-800 dark:text-gray-100 font-medium">
           📦 {lang("totalMessages", language)}: {stats?.totalMessages || 0}
