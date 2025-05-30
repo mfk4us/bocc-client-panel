@@ -1,3 +1,5 @@
+// Import GoogleOAuthProvider for Google OAuth integration
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -64,59 +66,62 @@ export default function App() {
     }
   }, [theme]);
 
+  // Wrap the app in GoogleOAuthProvider. Replace YOUR_GOOGLE_CLIENT_ID below with your actual Google Client ID
   return (
-    <UIProvider>
-      <Router>
-        <RouteRestorer />
-        {!role ? (
-          <Routes>
-            <Route path="/" element={<Login setRole={setRole} />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        ) : (
-          <Routes>
-            <Route
-              path="/*"
-              element={
-                <Layout
-                  role={role}
-                  language={language}
-                  setLanguage={setLanguage}
-                  isMobile={isMobile}
-                  theme={theme}
-                  setTheme={setTheme}
-                />
-              }
-            >
-              {role === "tenant" ? (
-                <>
-                  <Route index element={<Dashboard language={language} />} />
-                  <Route path="tenant/dashboard" element={<Dashboard language={language} />} />
-                  <Route path="tenant/messages" element={<Messages language={language} />} />
-                  <Route path="tenant/customers" element={<Customers language={language} />} />
-                  <Route path="tenant/profile" element={<Profile language={language} />} />
-                  <Route path="tenant/top-up" element={<TopUp language={language} />} />
-                  <Route path="tenant/bookings" element={<Bookings language={language} />} />
-                  <Route path="tenant/notification-settings" element={<NotificationSettings language={language} />} />
-                  <Route path="tenant/team" element={<Team language={language} />} />
-                  <Route path="tenant/campaigns" element={<Campaigns language={language} />} />
-                  <Route path="tenant/reports" element={<Reports language={language} />} />
-                  <Route path="tenant/integration" element={<Integration language={language} />} />
-                  <Route path="tenant/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
-                </>
-              ) : (
-                <>
-                  <Route index element={<AdminDashboard language={language} />} />
-                  <Route path="admin/dashboard" element={<AdminDashboard language={language} />} />
-                  <Route path="admin/tenants" element={<ManageTenants language={language} />} />
-                  <Route path="admin/manage-pages" element={<ManagePages language={language} />} />
-                  <Route path="admin/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
-                </>
-              )}
-            </Route>
-          </Routes>
-        )}
-      </Router>
-    </UIProvider>
+    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
+      <UIProvider>
+        <Router>
+          <RouteRestorer />
+          {!role ? (
+            <Routes>
+              <Route path="/" element={<Login setRole={setRole} />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          ) : (
+            <Routes>
+              <Route
+                path="/*"
+                element={
+                  <Layout
+                    role={role}
+                    language={language}
+                    setLanguage={setLanguage}
+                    isMobile={isMobile}
+                    theme={theme}
+                    setTheme={setTheme}
+                  />
+                }
+              >
+                {role === "tenant" ? (
+                  <>
+                    <Route index element={<Dashboard language={language} />} />
+                    <Route path="tenant/dashboard" element={<Dashboard language={language} />} />
+                    <Route path="tenant/messages" element={<Messages language={language} />} />
+                    <Route path="tenant/customers" element={<Customers language={language} />} />
+                    <Route path="tenant/profile" element={<Profile language={language} />} />
+                    <Route path="tenant/top-up" element={<TopUp language={language} />} />
+                    <Route path="tenant/bookings" element={<Bookings language={language} />} />
+                    <Route path="tenant/notification-settings" element={<NotificationSettings language={language} />} />
+                    <Route path="tenant/team" element={<Team language={language} />} />
+                    <Route path="tenant/campaigns" element={<Campaigns language={language} />} />
+                    <Route path="tenant/reports" element={<Reports language={language} />} />
+                    <Route path="tenant/integration" element={<Integration language={language} />} />
+                    <Route path="tenant/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
+                  </>
+                ) : (
+                  <>
+                    <Route index element={<AdminDashboard language={language} />} />
+                    <Route path="admin/dashboard" element={<AdminDashboard language={language} />} />
+                    <Route path="admin/tenants" element={<ManageTenants language={language} />} />
+                    <Route path="admin/manage-pages" element={<ManagePages language={language} />} />
+                    <Route path="admin/*" element={<div className="text-center text-2xl mt-16">Page Not Found</div>} />
+                  </>
+                )}
+              </Route>
+            </Routes>
+          )}
+        </Router>
+      </UIProvider>
+    </GoogleOAuthProvider>
   );
 }

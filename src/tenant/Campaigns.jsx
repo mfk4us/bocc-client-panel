@@ -62,20 +62,39 @@ export default function Campaigns({ language }) {
     fetchCount();
   }, []);
 
-  // Fetch available WhatsApp templates from your backend
+  // Fetch available Facebook WhatsApp templates from backend endpoint
   async function fetchTemplates() {
     setFetchingTemplates(true);
     setFetchTemplatesError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/templates`);
-      if (!res.ok) throw new Error(`Failed to fetch templates: ${res.statusText}`);
-      const json = await res.json();
-      setTemplates(json.templates);
-      setMessage("");
+      console.log("Fetching templates from:", `${API_BASE_URL}/facebook-templates`);
+      const res = await fetch(`${API_BASE_URL}/facebook-templates`);
+      const text = await res.text();
+
+      try {
+        const data = JSON.parse(text);
+        // Facebook API returns { data: [...] }
+        const templatesArray = Array.isArray(data.data) ? data.data : [];
+        const normalized = templatesArray.map(t => ({
+          name: t.name,
+          language: t.language,
+          components: t.components,
+        }));
+        setTemplates(normalized);
+        setMessage("");
+      } catch (jsonErr) {
+        console.error("Failed to parse JSON:", jsonErr, "Response text:", text);
+        setFetchTemplatesError("Failed to load WhatsApp templates. Invalid response from server.");
+        setTemplates([]);
+      }
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
     } catch (err) {
       console.error("Error loading templates:", err);
       setFetchTemplatesError(lang("failedToLoadTemplates", language) || "Failed to load WhatsApp templates. Please check your connection or contact support.");
-      setTemplates([]); // Clear templates so dropdown is empty and error is clear
+      setTemplates([]);
     } finally {
       setFetchingTemplates(false);
     }
