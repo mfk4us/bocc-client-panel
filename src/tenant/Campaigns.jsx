@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import { lang } from "../lang";
 import { supabase } from "../components/supabaseClient";
@@ -297,6 +298,36 @@ export default function Campaigns({ language }) {
     }
   };
 
+  // Add this function above the return:
+  const handleBulkFileChange = async (e) => {
+    const file = e.target.files[0];
+    setFile(file);
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === "csv") {
+      // No extra parsing needed here, handled in handleSendBulk
+      return;
+    }
+    if (ext === "xls" || ext === "xlsx") {
+      // Parse Excel file and store CSV-style rows for bulk send
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        // Convert Excel to CSV format string for PapaParse compatibility
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        // Recreate a File object (simulate a CSV upload)
+        const csvFile = new File([csv], file.name.replace(/\.[^/.]+$/, ".csv"), {
+          type: "text/csv",
+        });
+        setFile(csvFile);
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
   return (
     <div className="h-screen overflow-y-auto">
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -566,8 +597,8 @@ export default function Campaigns({ language }) {
                   </label>
                   <input
                     type="file"
-                    accept=".csv"
-                    onChange={(e) => setFile(e.target.files[0])}
+                    accept=".csv,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    onChange={handleBulkFileChange}
                     className="w-full text-base border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                   />
                   {/* Header file upload if needed */}
