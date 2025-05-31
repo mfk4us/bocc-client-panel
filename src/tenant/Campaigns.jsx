@@ -298,304 +298,306 @@ export default function Campaigns({ language }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Announcement Banner */}
-      <div className="w-full bg-purple-600 text-white py-3 px-4 flex flex-col items-center justify-center shadow-sm mb-4">
-        <div className="flex items-center gap-3">
-          <MegaphoneIcon className="h-6 w-6 text-white" />
-          <span className="font-bold text-lg sm:text-xl tracking-tight">
-            Campaign Management Dashboard
-          </span>
-        </div>
-        <div className="text-sm mt-1 opacity-90 font-medium">
-          Easily launch, monitor, and manage your messaging campaigns across multiple channels.
-        </div>
-      </div>
-
-      {/* Main container */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Top Navigation Bar */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+    <div className="h-screen overflow-y-auto">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        {/* Announcement Banner */}
+        <div className="w-full bg-purple-600 text-white py-3 px-4 flex flex-col items-center justify-center shadow-sm mb-4">
           <div className="flex items-center gap-3">
-            <InboxStackIcon className="h-7 w-7 text-indigo-600" />
-            <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Campaigns</span>
+            <MegaphoneIcon className="h-6 w-6 text-white" />
+            <span className="font-bold text-lg sm:text-xl tracking-tight">
+              Campaign Management Dashboard
+            </span>
           </div>
-          {/* Search/Filter bar */}
-          <div className="flex items-center gap-2">
-            <div className="relative w-64 max-w-full">
-              <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search campaigns..."
-                className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-                disabled
-              />
+          <div className="text-sm mt-1 opacity-90 font-medium">
+            Easily launch, monitor, and manage your messaging campaigns across multiple channels.
+          </div>
+        </div>
+
+        {/* Main container */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {/* Top Navigation Bar */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+            <div className="flex items-center gap-3">
+              <InboxStackIcon className="h-7 w-7 text-indigo-600" />
+              <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Campaigns</span>
             </div>
+            {/* Search/Filter bar */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-64 max-w-full">
+                <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search campaigns..."
+                  className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                  disabled
+                />
+              </div>
+              <button
+                className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ml-2"
+                disabled
+              >
+                <FunnelIcon className="h-5 w-5 mr-1" />
+                Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Segmented Tabs */}
+          <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 w-full max-w-md mx-auto md:mx-0 mb-2">
             <button
-              className="inline-flex items-center px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ml-2"
+              className="flex-1 px-4 py-2 rounded-md font-semibold text-sm transition
+                bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+              style={{ boxShadow: "0 1px 2px rgba(60,60,60,0.03)" }}
               disabled
             >
-              <FunnelIcon className="h-5 w-5 mr-1" />
-              Filters
+              Active
+            </button>
+            <button
+              className="flex-1 px-4 py-2 rounded-md font-semibold text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              disabled
+            >
+              Completed
+            </button>
+            <button
+              className="flex-1 px-4 py-2 rounded-md font-semibold text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              disabled
+            >
+              Drafts
             </button>
           </div>
-        </div>
 
-        {/* Segmented Tabs */}
-        <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 w-full max-w-md mx-auto md:mx-0 mb-2">
-          <button
-            className="flex-1 px-4 py-2 rounded-md font-semibold text-sm transition
-              bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-            style={{ boxShadow: "0 1px 2px rgba(60,60,60,0.03)" }}
-            disabled
-          >
-            Active
-          </button>
-          <button
-            className="flex-1 px-4 py-2 rounded-md font-semibold text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-            disabled
-          >
-            Completed
-          </button>
-          <button
-            className="flex-1 px-4 py-2 rounded-md font-semibold text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-            disabled
-          >
-            Drafts
-          </button>
-        </div>
-
-        {/* Rolling count banner */}
-        <div className="bg-purple-50 dark:bg-gray-800 border border-purple-200 dark:border-gray-700 shadow-sm rounded-lg p-4 flex items-center gap-3 mb-2">
-          <UserGroupIcon className="h-6 w-6 text-purple-500" />
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{lang("businessInitiatedCount", language)}</span>
-          <span className="text-purple-700 dark:text-purple-300 font-bold">{rollingCount}</span>
-        </div>
-
-        {/* Enhanced error message if templates fail to load */}
-        {message && templates.length === 0 ? (
-          <div className="mb-4 text-sm text-red-600">
-            {message}
+          {/* Rolling count banner */}
+          <div className="bg-purple-50 dark:bg-gray-800 border border-purple-200 dark:border-gray-700 shadow-sm rounded-lg p-4 flex items-center gap-3 mb-2">
+            <UserGroupIcon className="h-6 w-6 text-purple-500" />
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{lang("businessInitiatedCount", language)}</span>
+            <span className="text-purple-700 dark:text-purple-300 font-bold">{rollingCount}</span>
           </div>
-        ) : message ? (
-          <div className="mb-4 text-sm text-blue-600 dark:text-blue-400">
-            {message}
-          </div>
-        ) : null}
 
-        {/* Send Campaign Section */}
-        <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Send Campaign</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Single Campaign Card */}
-            <div className="shadow-sm rounded-lg border dark:bg-gray-800 bg-white p-6 flex flex-col gap-4 hover:shadow-md transition">
-              <div className="flex items-center gap-3 mb-2">
-                <ChatBubbleLeftRightIcon className="h-7 w-7 text-indigo-500" />
-                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {lang("sendSingleInvite", language)}
-                </span>
+          {/* Enhanced error message if templates fail to load */}
+          {message && templates.length === 0 ? (
+            <div className="mb-4 text-sm text-red-600">
+              {message}
+            </div>
+          ) : message ? (
+            <div className="mb-4 text-sm text-blue-600 dark:text-blue-400">
+              {message}
+            </div>
+          ) : null}
+
+          {/* Send Campaign Section */}
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Send Campaign</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Single Campaign Card */}
+              <div className="shadow-sm rounded-lg border dark:bg-gray-800 bg-white p-6 flex flex-col gap-4 hover:shadow-md transition">
+                <div className="flex items-center gap-3 mb-2">
+                  <ChatBubbleLeftRightIcon className="h-7 w-7 text-indigo-500" />
+                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    {lang("sendSingleInvite", language)}
+                  </span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Recipient Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="05XXXXXXXX"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full text-base border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                  <button
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition text-base"
+                    onClick={handleSendSingle}
+                    disabled={loading}
+                  >
+                    {loading ? lang("sending", language) : lang("send", language)}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Recipient Phone Number
-                </label>
-                <input
-                  type="tel"
-                  placeholder="05XXXXXXXX"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full text-base border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
-                />
+              {/* Bulk Campaign Card */}
+              <div className="shadow-sm rounded-lg border dark:bg-gray-800 bg-white p-6 flex flex-col gap-4 hover:shadow-md transition">
+                <div className="flex items-center gap-3 mb-2">
+                  <DocumentArrowUpIcon className="h-7 w-7 text-green-500" />
+                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    {lang("bulkWhatsAppSender", language) || "Bulk WhatsApp Sender"}
+                  </span>
+                </div>
+                {/* Campaign Type Selector */}
+                <div>
+                  <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">Select Campaign Type</label>
+                  <select
+                    className="w-full mb-3 border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+                    value={selectedCampaignType}
+                    onChange={e => {
+                      setSelectedCampaignType(e.target.value);
+                      setSelectedIntegrationLabel("");
+                      setTemplates([]);
+                    }}
+                  >
+                    <option value="">-- Choose Campaign Type --</option>
+                    <option value="whatsapp">WhatsApp Campaigns</option>
+                    <option value="sms">SMS Campaigns</option>
+                    <option value="email">Email Campaigns</option>
+                    <option value="instagram">Instagram DM Campaigns</option>
+                    <option value="facebook">Facebook Messenger Campaigns</option>
+                    <option value="telegram">Telegram Bot Campaigns</option>
+                    <option value="call">Automated Call Campaigns</option>
+                    <option value="drip">Drip Marketing Campaigns</option>
+                  </select>
+                </div>
+                {/* Integration Selector */}
+                <div>
+                  <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
+                    Select {selectedCampaignType ? selectedCampaignType.charAt(0).toUpperCase() + selectedCampaignType.slice(1) : ""} Account
+                  </label>
+                  <select
+                    className="w-full mb-3 border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+                    value={selectedIntegrationLabel}
+                    onChange={async (e) => {
+                      const value = e.target.value;
+                      setSelectedIntegrationLabel(value);
+                      await fetchTemplates();
+                    }}
+                  >
+                    <option value="">
+                      -- Choose {selectedCampaignType
+                        ? selectedCampaignType.charAt(0).toUpperCase() + selectedCampaignType.slice(1)
+                        : ""} Account --
+                    </option>
+                    {availableIntegrations.map((intg, idx) => (
+                      <option key={idx} value={intg.label}>
+                        {intg.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Step 1: Select Template */}
+                <div>
+                  <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
+                    1. {lang("selectTemplate", language)}
+                  </label>
+                  <select
+                    value={selectedTemplate}
+                    onChange={e => setSelectedTemplate(e.target.value)}
+                    className="w-full border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+                  >
+                    <option value="">-- {lang("chooseTemplate", language)} --</option>
+                    {templates.map(t => (
+                      <option key={t.name} value={t.name}>
+                        {t.name} ({t.language?.code || t.language})
+                      </option>
+                    ))}
+                  </select>
+                  {selectedTemplateObj && (
+                    <div className="my-2 p-3 bg-gray-100 dark:bg-gray-900 rounded-lg text-sm border border-gray-200 dark:border-gray-700">
+                      <strong className="block mb-1">{lang("templatePreview", language)}</strong>
+                      {/* Header preview */}
+                      {(() => {
+                        const headerComp = selectedTemplateObj.components?.find(c => c.type === "HEADER");
+                        const headerType = headerComp?.format || null;
+                        const headerExampleUrl = headerComp?.example?.header_handle?.[0] || null;
+                        if (headerType === "IMAGE" && headerExampleUrl)
+                          return (
+                            <div>
+                              <b>{lang("headerImage", language)}:</b>
+                              <img src={headerExampleUrl} alt="Sample header" width={100} className="my-2 rounded shadow" />
+                            </div>
+                          );
+                        if (headerType === "VIDEO" && headerExampleUrl)
+                          return (
+                            <div>
+                              <b>{lang("headerVideo", language)}:</b>
+                              <video src={headerExampleUrl} width={180} controls className="my-2 rounded shadow" />
+                            </div>
+                          );
+                        if (headerType === "TEXT" && headerComp.text)
+                          return (
+                            <div>
+                              <b>{lang("headerText", language)}:</b> <span>{headerComp.text}</span>
+                            </div>
+                          );
+                        if (headerType)
+                          return (
+                            <div>
+                              <b>{lang("headerType", language)}:</b> {headerType}
+                            </div>
+                          );
+                        return null;
+                      })()}
+                      {/* Body preview */}
+                      <div>
+                        <b>{lang("body", language)}:</b>
+                        <pre className="whitespace-pre-wrap">
+                          {selectedTemplateObj.components?.find(c => c.type === "BODY")?.text || ""}
+                        </pre>
+                      </div>
+                      {/* Footer preview */}
+                      {selectedTemplateObj.components?.find(c => c.type === "FOOTER")?.text && (
+                        <div>
+                          <b>{lang("footer", language)}:</b> {selectedTemplateObj.components.find(c => c.type === "FOOTER").text}
+                        </div>
+                      )}
+                      {/* Buttons preview */}
+                      {(() => {
+                        const btnComp = selectedTemplateObj.components?.find(c => c.type === "BUTTONS");
+                        if (btnComp && btnComp.buttons && btnComp.buttons.length > 0) {
+                          return (
+                            <div>
+                              <b>{lang("buttons", language)}:</b>
+                              <ul>
+                                {btnComp.buttons.map((btn, i) => (
+                                  <li key={i}>{btn.type}: {btn.text} {btn.url ? <a href={btn.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{btn.url}</a> : ""}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+                {/* Step 2: Upload CSV and optional media */}
+                <div>
+                  <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
+                    2. {lang("bulkUpload", language)} ({lang("csvFile", language)})
+                  </label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setFile(e.target.files[0])}
+                    className="w-full text-base border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                  {/* Header file upload if needed */}
+                  {(() => {
+                    const headerComp = selectedTemplateObj?.components?.find(c => c.type === "HEADER");
+                    const headerType = headerComp?.format || null;
+                    if (headerType === "IMAGE" || headerType === "VIDEO") {
+                      return (
+                        <>
+                          <label className="block mb-1 text-sm text-gray-700 dark:text-gray-300">{lang("uploadHeaderMedia", language)}</label>
+                          <input
+                            type="file"
+                            onChange={e => setMediaFile(e.target.files[0])}
+                            className="w-full text-base"
+                          />
+                        </>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+                {/* Send button */}
                 <button
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition text-base"
-                  onClick={handleSendSingle}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition text-base mt-1"
+                  onClick={handleSendBulk}
                   disabled={loading}
                 >
-                  {loading ? lang("sending", language) : lang("send", language)}
+                  {loading ? lang("sending", language) : lang("uploadAndSend", language)}
                 </button>
               </div>
-            </div>
-            {/* Bulk Campaign Card */}
-            <div className="shadow-sm rounded-lg border dark:bg-gray-800 bg-white p-6 flex flex-col gap-4 hover:shadow-md transition">
-              <div className="flex items-center gap-3 mb-2">
-                <DocumentArrowUpIcon className="h-7 w-7 text-green-500" />
-                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {lang("bulkWhatsAppSender", language) || "Bulk WhatsApp Sender"}
-                </span>
-              </div>
-              {/* Campaign Type Selector */}
-              <div>
-                <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">Select Campaign Type</label>
-                <select
-                  className="w-full mb-3 border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-                  value={selectedCampaignType}
-                  onChange={e => {
-                    setSelectedCampaignType(e.target.value);
-                    setSelectedIntegrationLabel("");
-                    setTemplates([]);
-                  }}
-                >
-                  <option value="">-- Choose Campaign Type --</option>
-                  <option value="whatsapp">WhatsApp Campaigns</option>
-                  <option value="sms">SMS Campaigns</option>
-                  <option value="email">Email Campaigns</option>
-                  <option value="instagram">Instagram DM Campaigns</option>
-                  <option value="facebook">Facebook Messenger Campaigns</option>
-                  <option value="telegram">Telegram Bot Campaigns</option>
-                  <option value="call">Automated Call Campaigns</option>
-                  <option value="drip">Drip Marketing Campaigns</option>
-                </select>
-              </div>
-              {/* Integration Selector */}
-              <div>
-                <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
-                  Select {selectedCampaignType ? selectedCampaignType.charAt(0).toUpperCase() + selectedCampaignType.slice(1) : ""} Account
-                </label>
-                <select
-                  className="w-full mb-3 border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-                  value={selectedIntegrationLabel}
-                  onChange={async (e) => {
-                    const value = e.target.value;
-                    setSelectedIntegrationLabel(value);
-                    await fetchTemplates();
-                  }}
-                >
-                  <option value="">
-                    -- Choose {selectedCampaignType
-                      ? selectedCampaignType.charAt(0).toUpperCase() + selectedCampaignType.slice(1)
-                      : ""} Account --
-                  </option>
-                  {availableIntegrations.map((intg, idx) => (
-                    <option key={idx} value={intg.label}>
-                      {intg.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Step 1: Select Template */}
-              <div>
-                <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
-                  1. {lang("selectTemplate", language)}
-                </label>
-                <select
-                  value={selectedTemplate}
-                  onChange={e => setSelectedTemplate(e.target.value)}
-                  className="w-full border px-4 py-2 rounded-lg text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-                >
-                  <option value="">-- {lang("chooseTemplate", language)} --</option>
-                  {templates.map(t => (
-                    <option key={t.name} value={t.name}>
-                      {t.name} ({t.language?.code || t.language})
-                    </option>
-                  ))}
-                </select>
-                {selectedTemplateObj && (
-                  <div className="my-2 p-3 bg-gray-100 dark:bg-gray-900 rounded-lg text-sm border border-gray-200 dark:border-gray-700">
-                    <strong className="block mb-1">{lang("templatePreview", language)}</strong>
-                    {/* Header preview */}
-                    {(() => {
-                      const headerComp = selectedTemplateObj.components?.find(c => c.type === "HEADER");
-                      const headerType = headerComp?.format || null;
-                      const headerExampleUrl = headerComp?.example?.header_handle?.[0] || null;
-                      if (headerType === "IMAGE" && headerExampleUrl)
-                        return (
-                          <div>
-                            <b>{lang("headerImage", language)}:</b>
-                            <img src={headerExampleUrl} alt="Sample header" width={100} className="my-2 rounded shadow" />
-                          </div>
-                        );
-                      if (headerType === "VIDEO" && headerExampleUrl)
-                        return (
-                          <div>
-                            <b>{lang("headerVideo", language)}:</b>
-                            <video src={headerExampleUrl} width={180} controls className="my-2 rounded shadow" />
-                          </div>
-                        );
-                      if (headerType === "TEXT" && headerComp.text)
-                        return (
-                          <div>
-                            <b>{lang("headerText", language)}:</b> <span>{headerComp.text}</span>
-                          </div>
-                        );
-                      if (headerType)
-                        return (
-                          <div>
-                            <b>{lang("headerType", language)}:</b> {headerType}
-                          </div>
-                        );
-                      return null;
-                    })()}
-                    {/* Body preview */}
-                    <div>
-                      <b>{lang("body", language)}:</b>
-                      <pre className="whitespace-pre-wrap">
-                        {selectedTemplateObj.components?.find(c => c.type === "BODY")?.text || ""}
-                      </pre>
-                    </div>
-                    {/* Footer preview */}
-                    {selectedTemplateObj.components?.find(c => c.type === "FOOTER")?.text && (
-                      <div>
-                        <b>{lang("footer", language)}:</b> {selectedTemplateObj.components.find(c => c.type === "FOOTER").text}
-                      </div>
-                    )}
-                    {/* Buttons preview */}
-                    {(() => {
-                      const btnComp = selectedTemplateObj.components?.find(c => c.type === "BUTTONS");
-                      if (btnComp && btnComp.buttons && btnComp.buttons.length > 0) {
-                        return (
-                          <div>
-                            <b>{lang("buttons", language)}:</b>
-                            <ul>
-                              {btnComp.buttons.map((btn, i) => (
-                                <li key={i}>{btn.type}: {btn.text} {btn.url ? <a href={btn.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{btn.url}</a> : ""}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                )}
-              </div>
-              {/* Step 2: Upload CSV and optional media */}
-              <div>
-                <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
-                  2. {lang("bulkUpload", language)} ({lang("csvFile", language)})
-                </label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  className="w-full text-base border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
-                />
-                {/* Header file upload if needed */}
-                {(() => {
-                  const headerComp = selectedTemplateObj?.components?.find(c => c.type === "HEADER");
-                  const headerType = headerComp?.format || null;
-                  if (headerType === "IMAGE" || headerType === "VIDEO") {
-                    return (
-                      <>
-                        <label className="block mb-1 text-sm text-gray-700 dark:text-gray-300">{lang("uploadHeaderMedia", language)}</label>
-                        <input
-                          type="file"
-                          onChange={e => setMediaFile(e.target.files[0])}
-                          className="w-full text-base"
-                        />
-                      </>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
-              {/* Send button */}
-              <button
-                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition text-base mt-1"
-                onClick={handleSendBulk}
-                disabled={loading}
-              >
-                {loading ? lang("sending", language) : lang("uploadAndSend", language)}
-              </button>
             </div>
           </div>
         </div>
