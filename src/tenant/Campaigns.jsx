@@ -36,7 +36,6 @@ export default function Campaigns({ language }) {
   const [selectedIntegrationLabel, setSelectedIntegrationLabel] = useState("");
 
   const [userName, setUserName] = useState("Unknown User");
-  const [workflowName, setWorkflowName] = useState("defaultWorkflow");
 
   // Helpers for preview and header type
   const selectedTemplateObj = templates.find(t => t.name === selectedTemplate);
@@ -64,7 +63,6 @@ export default function Campaigns({ language }) {
         // Check localStorage for workflow name first
         const storedWorkflow = localStorage.getItem("workflow_name");
         if (storedWorkflow) {
-          setWorkflowName(storedWorkflow);
           console.log("✅ Loaded workflow_name from localStorage:", storedWorkflow);
           // Fetch available integrations
           const { data: integrations, error: intError } = await supabase
@@ -85,7 +83,6 @@ export default function Campaigns({ language }) {
           .single();
 
         if (memberData?.workflow_name) {
-          setWorkflowName(memberData.workflow_name);
           localStorage.setItem("workflow_name", memberData.workflow_name);
           // Fetch available integrations
           const { data: integrations, error: intError } = await supabase
@@ -97,7 +94,6 @@ export default function Campaigns({ language }) {
           if (integrations) setAvailableIntegrations(integrations);
         } else {
           console.warn("⚠️ No workflow_name found, using default.");
-          setWorkflowName("defaultWorkflow");
         }
 
         if (memberError) {
@@ -128,16 +124,15 @@ export default function Campaigns({ language }) {
     setFetchingTemplates(true);
     setFetchTemplatesError(null);
     try {
-      console.log("Using workflow name for template fetch:", workflowName);
-      // Fallback if workflowName is undefined or empty
-      const safeWorkflowName = workflowName || "defaultWorkflow";
+      // Always read workflow name from localStorage at fetch time
+      const storedWorkflow = localStorage.getItem("workflow_name") || "defaultWorkflow";
       const integrationLabel = selectedIntegrationLabel || "";
       console.log(
         "Fetching templates from:",
-        `${API_BASE_URL}/facebook-templates?workflow_name=${encodeURIComponent(safeWorkflowName)}&label=${encodeURIComponent(integrationLabel)}`
+        `${API_BASE_URL}/facebook-templates?workflow_name=${encodeURIComponent(storedWorkflow)}&label=${encodeURIComponent(integrationLabel)}`
       );
       const res = await fetch(
-        `${API_BASE_URL}/facebook-templates?workflow_name=${encodeURIComponent(safeWorkflowName)}&label=${encodeURIComponent(integrationLabel)}`
+        `${API_BASE_URL}/facebook-templates?workflow_name=${encodeURIComponent(storedWorkflow)}&label=${encodeURIComponent(integrationLabel)}`
       );
       const text = await res.text();
       console.log("Response status:", res.status, "Response text:", text);
@@ -193,12 +188,13 @@ export default function Campaigns({ language }) {
     }
   }
 
-  // Fetch templates when workflowName is set and not defaultWorkflow
+  // Fetch templates when workflow_name or integration label changes
   useEffect(() => {
-    if (workflowName && workflowName !== "defaultWorkflow") {
+    const storedWorkflow = localStorage.getItem("workflow_name");
+    if (storedWorkflow && storedWorkflow !== "defaultWorkflow") {
       fetchTemplates();
     }
-  }, [workflowName]);
+  }, [selectedIntegrationLabel]);
 
   // Send a single invite
   const handleSendSingle = async () => {
@@ -233,7 +229,7 @@ export default function Campaigns({ language }) {
           content: content,
           media_url: null,
           contact_name: null,
-          workflow_name: workflowName,
+          workflow_name: localStorage.getItem("workflow_name") || "defaultWorkflow",
         }]);
       if (error) throw error;
       setMessage(lang("inviteSent", language) || "Invite sent!");
