@@ -260,8 +260,12 @@ export default function Campaigns({ language }) {
       const text = await file.text();
       const parsed = Papa.parse(text, { header: true });
       const contacts = parsed.data
-        .filter(row => row.number)
-        .map(row => row.number.replace(/^0/, "966"));
+        .map(row => ({
+          name: row.name && row.name.trim() !== "" ? row.name.trim() : null,
+          number: row.number && row.number.trim() !== "" ? row.number.replace(/^0/, "966").trim() : null,
+          email: row.email && row.email.trim() !== "" ? row.email.trim() : null,
+        }))
+        .filter(row => row.number); // Only send rows with a valid number
 
       // If mediaFile provided, upload to Supabase
       let mediaUrl = null;
@@ -595,6 +599,23 @@ export default function Campaigns({ language }) {
                   <label className="block font-medium mb-1 text-sm text-gray-700 dark:text-gray-300">
                     2. {lang("bulkUpload", language)} ({lang("csvFile", language)})
                   </label>
+                  <button
+                    type="button"
+                    className="mt-1 mb-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded text-gray-700"
+                    onClick={() => {
+                      const csvContent = "name,number,email\nJohn Doe,966501234567,john@example.com\nJane Smith,966502345678,jane@example.com\n";
+                      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.setAttribute("download", "sample_contacts.csv");
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                  >
+                    Download Sample CSV
+                  </button>
                   <input
                     type="file"
                     accept=".csv,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
