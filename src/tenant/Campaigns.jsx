@@ -280,12 +280,16 @@ export default function Campaigns({ language }) {
         mediaUrl = publicURL;
       }
 
+      // Get workflowName from localStorage or fallback
+      const workflowName = localStorage.getItem("workflow_name") || "defaultWorkflow";
+
       // Send webhook to n8n
       const res = await fetch(TEMPLATE_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           templateName: selectedTemplate,
+          workflowName,
           contacts,
           mediaUrl,
         }),
