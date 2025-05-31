@@ -40,26 +40,48 @@ app.use(express.json());
 
 // GET /facebook-templates: Fetch WhatsApp templates from Facebook Graph API using integration config from Supabase
 app.get('/facebook-templates', async (req, res) => {
+  const { workflow_name } = req.query;
+  if (!workflow_name) {
+    return res.status(400).json({ error: 'Missing workflow_name in query' });
+  }
+
+  console.log('Requested workflow_name:', workflow_name);
+
   try {
-    const { data: integrations, error } = await supabase
+    const { data: integration, error } = await supabase
       .from('integrations')
-      .select('config')
-      .or('integration_type.eq.facebook,integration_type.eq.whatsapp')
-      .limit(1)
+      .select('config, workflow_name')
+      .eq('workflow_name', workflow_name)
+      .eq('integration_type', 'whatsapp')
+      .eq('is_active', true)
       .maybeSingle();
+
+    console.log('Fetched integration config for:', integration?.workflow_name);
 
     if (error) {
       console.error('Supabase error:', error);
       return res.status(500).json({ error: 'Failed to fetch integration config' });
     }
-    if (!integrations || !integrations.config) {
+    if (!integration || !integration.config) {
       console.error('No integration config found');
       return res.status(404).json({ error: 'Integration config not found' });
     }
 
-    const { wa_access_token, wa_waba_id } = integrations.config;
+    // Defensive: Parse config if it’s a string
+    let config = integration.config;
+    if (typeof config === 'string') {
+      try {
+        config = JSON.parse(config);
+      } catch (e) {
+        console.error('Failed to parse config JSON:', e, config);
+        return res.status(500).json({ error: 'Invalid config format' });
+      }
+    }
+    const { wa_access_token, wa_waba_id } = config;
+    console.log('Using wa_access_token:', wa_access_token ? 'Exists' : 'Missing');
+    console.log('Using wa_waba_id:', wa_waba_id);
     if (!wa_access_token || !wa_waba_id) {
-      console.error('wa_access_token or wa_waba_id missing in integration config');
+      console.error('wa_access_token or wa_waba_id missing in integration config', config);
       return res.status(400).json({ error: 'wa_access_token or wa_waba_id missing in integration config' });
     }
 
