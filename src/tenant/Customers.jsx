@@ -267,7 +267,23 @@ export default function Customers({ language }) {
   // Other state declarations
   const [expandedCustomer, setExpandedCustomer] = useState(null);
   // Workflow name state, loaded from localStorage on mount
-  const [workflowName, setWorkflowName] = useState(null);
+  const [workflowName, setWorkflowName] = useState(() => {
+    const workflowNameFromStorage = localStorage.getItem('workflow_name');
+    console.log('Loaded workflow_name from localStorage:', workflowNameFromStorage);
+    return workflowNameFromStorage || null;
+  });
+
+  // Sync workflowName from localStorage and storage events
+  useEffect(() => {
+    const syncWorkflowName = () => {
+      const storedWorkflow = localStorage.getItem("workflow_name");
+      console.log('Loaded workflow_name from localStorage:', storedWorkflow);
+      setWorkflowName(storedWorkflow || null);
+    };
+    syncWorkflowName();
+    window.addEventListener("storage", syncWorkflowName);
+    return () => window.removeEventListener("storage", syncWorkflowName);
+  }, []);
   // State for delete confirmation modal
   const [deletingCustomerId, setDeletingCustomerId] = useState(null);
   // Handler to open the view messages modal
@@ -674,6 +690,7 @@ export default function Customers({ language }) {
         .from("messages")
         .select("id")
         .eq("number", fullNumber)
+        .eq("workflow_name", workflowName)
         .gt("timestamp", cutoff)
         .limit(1);
 
@@ -721,7 +738,8 @@ export default function Customers({ language }) {
       const { error } = await supabase
         .from("customer_notes")
         .update({ notes, tags })
-        .eq("id", editingNoteId);
+        .eq("id", editingNoteId)
+        .eq("workflow_name", workflowName);
 
       if (!error) {
         setNotesMap((prev) => ({
@@ -756,35 +774,37 @@ export default function Customers({ language }) {
     setTags("");
   };
 
-  // Load workflow name from localStorage on mount
-  useEffect(() => {
-    const storedWorkflow = localStorage.getItem("workflow");
-    if (storedWorkflow && storedWorkflow.trim() !== "") {
-      setWorkflowName(storedWorkflow);
-      setWorkflowDebug(storedWorkflow);
-    } else {
-      setWorkflowName(null);
-      setWorkflowDebug(null);
-    }
-  }, []);
+  // (Removed: Load workflow name from localStorage on mount -- now handled above)
 
-  // --- Fetch customers with workflow_name filter ---
+// --- Fetch customers with workflow_name filter using Supabase SDK ---
+
   useEffect(() => {
     setWorkflowDebug(workflowName);
     if (!workflowName) return;
+    // Supabase fetch logic
     const fetchData = async () => {
-      // Filter customers by workflow_name
-      const { data: customersData, error: customersError } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("workflow_name", workflowName);
+      const workflow_name = localStorage.getItem('workflow_name');
+      console.log('Loaded workflow_name from localStorage:', workflow_name);
 
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('workflow_name', workflow_name);
+
+      if (error) {
+        console.error('Supabase fetch error:', error);
+      } else {
+        setCustomers(data);
+      }
+    };
+    fetchData();
+
+    // Also fetch notes from Supabase as before
+    const fetchNotes = async () => {
       const { data: notesData, error: notesError } = await supabase
         .from("customer_notes")
         .select("*")
         .eq("workflow_name", workflowName);
-
-      if (!customersError) setCustomers(customersData || []);
       if (!notesError) {
         const map = {};
         (notesData || []).forEach(note => {
@@ -797,8 +817,7 @@ export default function Customers({ language }) {
         setNotesMap(map);
       }
     };
-
-    fetchData();
+    fetchNotes();
   }, [workflowName]);
 
   useEffect(() => {
